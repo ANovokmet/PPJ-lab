@@ -10,7 +10,8 @@ public class Cvor {
 	public ArrayList<Cvor> djeca;
 	public Cvor roditelj;
 	public String tip;
-	public String l_izraz;
+	public String ntip;
+	public boolean l_izraz;//boolean
 	public int razina;  //dubina u stablu
 	public int index;   //index u listi objekata, koristi se pri stvaranju stabla
 	
@@ -28,7 +29,8 @@ public class Cvor {
 		razina=razina1;
 		index=index1;
 		tip=null;
-		l_izraz=null;
+		ntip=null;
+		l_izraz=false;
 	}
 	public Cvor(String ime1, String redak1, String ime_iz_koda1, Cvor roditelj1, int razina1, int index1){
 		ime=ime1;
@@ -38,7 +40,7 @@ public class Cvor {
 		razina=razina1;
 		index=index1;
 		tip=null;
-		l_izraz=null;
+		l_izraz=false;
 	}
 	
 	@Override
