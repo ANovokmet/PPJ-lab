@@ -7,6 +7,7 @@ public class Djelokrug {
 	public Djelokrug roditeljDjelokrug;//ugnjezdujuci blok
 	public ArrayList<Cvor> cvorovi;
 	
+	public String uFunkciji;
 	
 	public HashMap<String, Informacija> tablica_lokalnih_imena;
 	

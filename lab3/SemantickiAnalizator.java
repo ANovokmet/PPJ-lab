@@ -16,7 +16,7 @@ public class SemantickiAnalizator {
 	public static void main(String[] args) throws IOException {
 		definiraneFunkcije = new HashMap<String, Informacija>();
 		
-		BufferedReader bf = new BufferedReader(new FileReader("primjeri/14_lval2/test.in"));
+		BufferedReader bf = new BufferedReader(new FileReader("primjeri/01_idn/test.in"));
 		Cvor glavni = Cvor.stvori_stablo_iz_filea(bf);
 		System.out.println(glavni);
 		System.out.println(glavni.trenutacna_produkcija());
@@ -25,8 +25,11 @@ public class SemantickiAnalizator {
 		globalniDjelokrug = new Djelokrug(null);
 		trenutniDjelokrug = globalniDjelokrug;
 		
-		
+		String a="niz const char";
+		String b="niz int";
+		System.out.println(implicitnoPretvoriva(a, b));
 	}
+
 	
 	public static void provjeri(Cvor cvor){
 		
@@ -35,11 +38,10 @@ public class SemantickiAnalizator {
 		}
 		if(cvor.trenutacna_produkcija().equals("<primarni_izraz> ::= BROJ")){
 			
-			try { 
-		        Integer.parseInt(cvor.djeca.get(0).ime); 
-		    } catch(NumberFormatException e) { 
-		        System.out.print("nije u int rasponu");
-		    }
+			if(!isInteger(cvor.djeca.get(0).ime)){
+				System.out.print("nije u int rasponu");
+			}
+			
 			
 			cvor.tip = "int";
 			cvor.l_izraz = false;
@@ -354,6 +356,7 @@ public class SemantickiAnalizator {
 			
 		}
 		if(cvor.trenutacna_produkcija().equals("<naredba_skoka> ::= KR_RETURN <izraz> TOCKAZAREZ")){
+			provjeri(cvor.djeca.get(0));
 			
 		}
 		
@@ -436,7 +439,11 @@ public class SemantickiAnalizator {
 		if(cvor.trenutacna_produkcija().equals("<deklaracija> ::= <ime_tipa> <lista_init_deklaratora> TOCKAZAREZ")){
 			provjeri(cvor.djeca.get(0));
 			
-			cvor.djeca.get(1).tip=cvor.djeca.get(0).tip;
+			
+			//vari-jable brojevnog tipa ntip ce biti cijeli tip, za nizove ce biti tip elementa niza, a za funkcije
+			//ce biti povratni tip.
+			cvor.djeca.get(1).ntip=cvor.djeca.get(0).tip;
+			//if(tip=brojevni tip)ntip=cijeli
 			provjeri(cvor.djeca.get(1));//uz nasljedno svojstvo <lista_init...><-<imetipa>.tip
 		}
 		
@@ -509,5 +516,64 @@ public class SemantickiAnalizator {
 		
 	}
 	
+	public static boolean implicitnoPretvoriva(String a, String b){
+		if(a.equals(b)){//T~T
+			return true;
+		}
+		
+		if(a.startsWith("const")){//const T~T
+			String T =a.substring(6);
+			
+			return implicitnoPretvoriva(T, b);
+			
+		}
+		
+		if(a.equals("int") || a.equals("char")){//char~const char, int~const int
+			if(b.startsWith("const")){
+				String T =b.substring(6);
+				
+				return implicitnoPretvoriva(a, T);
+				
+			}
+		}
+		
+		if(a.equals("char") && b.equals("int")){//char~int
+			return true;
+		}
+		
+		if(a.startsWith("niz")){//niz T~niz const T
+			String T =a.substring(4);
+			if(!T.startsWith("const")){
+				if(b.equals("niz const "+T)){
+					return true;
+				}
+			}
+			/*else{//niz const T~niz T
+				if(b.equals("niz "+T.substring(6))){
+					return true;
+				}
+			}*/
+		}
+		
+		return false;
+	}
+	
+	public static boolean isInteger(String string){
+		
+		try {
+			if(string.startsWith("0x")){
+				Integer.parseInt(string.substring(2),16);
+			}
+			else if(string.startsWith("0")){
+				Integer.parseInt(string.substring(1),8);
+			}
+			else{
+	        Integer.parseInt(string);
+			}
+	    } catch(NumberFormatException e) { 
+	        return false;
+	    }
+		return true;
+	}
 	
 }

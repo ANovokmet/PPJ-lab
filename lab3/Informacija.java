@@ -5,6 +5,7 @@ public class Informacija {
 	private String vrijednost;
 	public String tip;
 	public boolean isFunkcija;
+	public boolean isDefinirana;
 	public ArrayList<Informacija> argumenti;
 	
 	
