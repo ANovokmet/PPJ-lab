@@ -20,8 +20,10 @@ public class Djelokrug {
 		tablica_lokalnih_imena.put(naziv, new Informacija(tip));
 	}
 	
-	public void dodajFunkcijuUTablicu(String tip, String naziv, ArrayList<Informacija> argumenti){
-		tablica_lokalnih_imena.put(naziv, new Informacija(tip, argumenti));
+	public Informacija dodajFunkcijuUTablicu(String tip, String naziv, ArrayList<Informacija> argumenti){
+		Informacija novaFunkcija = new Informacija(tip, argumenti);
+		tablica_lokalnih_imena.put(naziv, novaFunkcija);
+		return novaFunkcija;
 	}
 	
 	public boolean sadrziIdn(String ime){

@@ -12,11 +12,13 @@ public class SemantickiAnalizator {
 	static Djelokrug globalniDjelokrug;//može i bez
 	static Djelokrug trenutniDjelokrug;
 	static HashMap<String, Informacija> definiraneFunkcije;
+	static Informacija trenutnaFunkcija;
 	
 	public static void main(String[] args) throws IOException {
 		definiraneFunkcije = new HashMap<String, Informacija>();
+		trenutnaFunkcija = null;
 		
-		BufferedReader bf = new BufferedReader(new FileReader("primjeri/01_idn/test.in"));
+		BufferedReader bf = new BufferedReader(new FileReader("primjeri/02_broj/test.in"));
 		Cvor glavni = Cvor.stvori_stablo_iz_filea(bf);
 		System.out.println(glavni);
 		System.out.println(glavni.trenutacna_produkcija());
@@ -24,6 +26,10 @@ public class SemantickiAnalizator {
 		
 		globalniDjelokrug = new Djelokrug(null);
 		trenutniDjelokrug = globalniDjelokrug;
+		
+		
+		provjeri(glavni);
+		
 		
 		String a="niz const char";
 		String b="niz int";
@@ -34,12 +40,20 @@ public class SemantickiAnalizator {
 	public static void provjeri(Cvor cvor){
 		
 		if(cvor.trenutacna_produkcija().equals("<primarni_izraz> ::= IDN")){
-			
+			Cvor IDN = cvor.djeca.get(0);
+			if(trenutniDjelokrug.getIdentifikator(IDN.ime_iz_koda)!=null){
+				cvor.tip = trenutniDjelokrug.getIdentifikator(IDN.ime_iz_koda).tip;
+				cvor.l_izraz = IDN.l_izraz;//l_izraz je samo ako je char/int bez const
+			}
+			else{
+				System.out.print("nije deklarirano ime");
+				
+			}
 		}
 		if(cvor.trenutacna_produkcija().equals("<primarni_izraz> ::= BROJ")){
 			
 			if(!isInteger(cvor.djeca.get(0).ime)){
-				System.out.print("nije u int rasponu");
+				ispisiGresku(cvor);
 			}
 			
 			
@@ -106,7 +120,10 @@ public class SemantickiAnalizator {
 		}
 		
 		if(cvor.trenutacna_produkcija().equals("<cast_izraz> ::= <unarni_izraz>")){
+			provjeri(cvor.djeca.get(0));
 			
+			cvor.tip = cvor.djeca.get(0).tip;
+			cvor.l_izraz = cvor.djeca.get(0).l_izraz;			
 		}
 		if(cvor.trenutacna_produkcija().equals("<cast_izraz> ::= L_ZAGRADA <ime_tipa> D_ZAGRADA <cast_izraz>")){
 			
@@ -164,7 +181,10 @@ public class SemantickiAnalizator {
 		
 		
 		if(cvor.trenutacna_produkcija().equals("<odnosni_izraz> ::= <aditivni_izraz>")){
+			provjeri(cvor.djeca.get(0));
 			
+			cvor.tip = cvor.djeca.get(0).tip;
+			cvor.l_izraz = cvor.djeca.get(0).l_izraz;
 		}
 		if(cvor.trenutacna_produkcija().equals("<odnosni_izraz> ::= <odnosni_izraz> OP_LT <aditivni_izraz>")){
 			
@@ -228,7 +248,10 @@ public class SemantickiAnalizator {
 		
 		
 		if(cvor.trenutacna_produkcija().equals("<log_i_izraz> ::= <bin_ili_izraz>")){
+			provjeri(cvor.djeca.get(0));
 			
+			cvor.tip = cvor.djeca.get(0).tip;
+			cvor.l_izraz = cvor.djeca.get(0).l_izraz;
 		}
 		if(cvor.trenutacna_produkcija().equals("<log_i_izraz> ::= <log_i_izraz> OP_I <bin_ili_izraz>")){
 			
@@ -265,7 +288,11 @@ public class SemantickiAnalizator {
 		
 		
 		if(cvor.trenutacna_produkcija().equals("<izraz> ::= <izraz_pridruzivanja>")){
+			//tip i l-izraz
+			provjeri(cvor.djeca.get(0));
 			
+			cvor.tip = cvor.djeca.get(0).tip;
+			cvor.l_izraz = cvor.djeca.get(0).l_izraz;
 		}
 		if(cvor.trenutacna_produkcija().equals("<izraz> ::= <izraz> ZAREZ <izraz_pridruzivanja>")){
 			
@@ -356,8 +383,13 @@ public class SemantickiAnalizator {
 			
 		}
 		if(cvor.trenutacna_produkcija().equals("<naredba_skoka> ::= KR_RETURN <izraz> TOCKAZAREZ")){
-			provjeri(cvor.djeca.get(0));
+			Cvor izraz = cvor.djeca.get(1);
+			provjeri(izraz);
 			
+			//naredba je unutar funkcije, i tipfje~izraz
+			if(!implicitnoPretvoriva(izraz.tip, trenutnaFunkcija.tip)){
+				System.out.println("ne nalazi se unutar fje ili ne vrjedi cast");
+			}
 		}
 		
 		
@@ -385,12 +417,12 @@ public class SemantickiAnalizator {
 			}
 			
 			Cvor IDN = cvor.djeca.get(1);
-			if(definiraneFunkcije.containsKey(IDN.ime)){
+			if(definiraneFunkcije.containsKey(IDN.ime_iz_koda)){
 				System.out.print("funkcija moze biti najvise jednom definirana");
 			}
 			
-			if(globalniDjelokrug.sadrziFju(IDN.ime)){
-				Informacija funkcija = globalniDjelokrug.getIdentifikator(IDN.ime);
+			if(globalniDjelokrug.sadrziFju(IDN.ime_iz_koda)){
+				Informacija funkcija = globalniDjelokrug.getIdentifikator(IDN.ime_iz_koda);
 				
 				if(funkcija.tip.equals(ime_tipa.tip) && funkcija.argumenti==null){
 					
@@ -400,12 +432,14 @@ public class SemantickiAnalizator {
 				}
 			}
 			//zabilježi definiciju i deklaraciju fje
-			definiraneFunkcije.put(IDN.ime, new Informacija(ime_tipa.tip, null));
+			definiraneFunkcije.put(IDN.ime_iz_koda, new Informacija(ime_tipa.tip, null));
 			
-			trenutniDjelokrug.dodajFunkcijuUTablicu(ime_tipa.tip, IDN.ime, null);
+			trenutnaFunkcija = trenutniDjelokrug.dodajFunkcijuUTablicu(ime_tipa.tip, IDN.ime_iz_koda, null);
 			
 			//mozda tu da udje i izadje iz djelokruga
 			provjeri(cvor.djeca.get(5));
+			
+			trenutnaFunkcija = null; //izaði izvan funkcije
 			
 		}
 		if(cvor.trenutacna_produkcija().equals("<definicija_funkcije> ::= <ime_tipa> IDN L_ZAGRADA <lista_parametara> D_ZAGRADA <slozena_naredba>")){
@@ -485,8 +519,8 @@ public class SemantickiAnalizator {
 				System.out.print("ne smije biti void");
 			}
 			
-			if(!trenutniDjelokrug.sadrziIdn(IDN.ime)){
-				trenutniDjelokrug.dodajIdentifikatorUTablicu(IDN.tip, IDN.ime);
+			if(!trenutniDjelokrug.sadrziIdn(IDN.ime_iz_koda)){
+				trenutniDjelokrug.dodajIdentifikatorUTablicu(IDN.tip, IDN.ime_iz_koda);
 			}
 		}
 		if(cvor.trenutacna_produkcija().equals("<izravni_deklarator> ::= IDN L_UGL_ZAGRADA BROJ D_UGL_ZAGRADA")){
@@ -576,4 +610,15 @@ public class SemantickiAnalizator {
 		return true;
 	}
 	
+	public static void ispisiGresku(Cvor cvor){
+		System.out.print(cvor.ime+" ::=");
+		for(Cvor dijete:cvor.djeca){
+			System.out.print(" "+dijete.ime);
+			
+			if(dijete.djeca.isEmpty()){
+				System.out.print("("+dijete.redak+","+dijete.ime_iz_koda+")");
+			}
+		}
+		System.exit(0);
+	}
 }
