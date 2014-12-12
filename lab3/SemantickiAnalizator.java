@@ -18,7 +18,7 @@ public class SemantickiAnalizator {
 		definiraneFunkcije = new HashMap<String, Informacija>();
 		trenutnaFunkcija = null;
 		
-		BufferedReader bf = new BufferedReader(new FileReader("primjeri/02_broj/test.in"));
+		BufferedReader bf = new BufferedReader(new FileReader("primjeri/03_niz_znakova/test.in"));
 		Cvor glavni = Cvor.stvori_stablo_iz_filea(bf);
 		System.out.println(glavni);
 		System.out.println(glavni.trenutacna_produkcija());
@@ -43,7 +43,7 @@ public class SemantickiAnalizator {
 			Cvor IDN = cvor.djeca.get(0);
 			if(trenutniDjelokrug.getIdentifikator(IDN.ime_iz_koda)!=null){
 				cvor.tip = trenutniDjelokrug.getIdentifikator(IDN.ime_iz_koda).tip;
-				cvor.l_izraz = IDN.l_izraz;//l_izraz je samo ako je char/int bez const
+				cvor.l_izraz = trenutniDjelokrug.getIdentifikator(IDN.ime_iz_koda).l_izraz;//l_izraz je samo ako je char/int bez const
 			}
 			else{
 				System.out.print("nije deklarirano ime");
@@ -64,7 +64,13 @@ public class SemantickiAnalizator {
 			
 		}
 		if(cvor.trenutacna_produkcija().equals("<primarni_izraz> ::= NIZ_ZNAKOVA")){
+			//niz mora bit ispravan po 4.3.2
+			if(!nizZnakovaIspravan(cvor.djeca.get(0).ime_iz_koda)){
+				ispisiGresku(cvor);
+			}
 			
+			cvor.tip = "niz const char";
+			cvor.l_izraz = false;
 		}
 		if(cvor.trenutacna_produkcija().equals("<primarni_izraz> ::= L_ZAGRADA <izraz> D_ZAGRADA")){
 			
@@ -281,6 +287,10 @@ public class SemantickiAnalizator {
 			postfiks_izraz.l_izraz=true;//1
 			provjeri(cvor.djeca.get(2));
 			//cvor.tip ~~ postfiks_izraz.tip
+			
+			if(!implicitnoPretvoriva(cvor.tip, postfiks_izraz.tip)){
+				ispisiGresku(cvor);
+			}
 			
 			cvor.tip = postfiks_izraz.tip;
 			cvor.l_izraz = false;//0
@@ -550,6 +560,30 @@ public class SemantickiAnalizator {
 		
 	}
 	
+	private static boolean nizZnakovaIspravan(String s) {
+		for (int i = 1; i < s.length()-2; i++){//bez navodnika
+			char prvi = s.charAt(i);
+			char drugi = s.charAt(i+1);
+		    
+		    if(prvi == '\\' && (
+	    		drugi != 't' || 
+				drugi != 'n' || 
+				drugi != '0' || 
+				drugi != '\'' || 
+				drugi != '\"' || 
+				drugi != '\\' )){
+		    	return false;
+		    }
+		    
+		    if(prvi != '\\' && drugi == '\"'){
+		    	return false;
+		    }
+		    
+		}
+		return true;
+	}
+
+
 	public static boolean implicitnoPretvoriva(String a, String b){
 		if(a.equals(b)){//T~T
 			return true;
