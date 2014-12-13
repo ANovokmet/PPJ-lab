@@ -15,6 +15,10 @@ public class Cvor {
 	public int razina;  //dubina u stablu
 	public int index;   //index u listi objekata, koristi se pri stvaranju stabla
 	
+	public ArrayList<String> tipovi;
+	public int br_elem;
+	
+	
 	private static ArrayList<HashMap<String,String>> lista;
 	
 	public Cvor(){
@@ -31,6 +35,8 @@ public class Cvor {
 		tip=null;
 		ntip=null;
 		l_izraz=false;
+		//TODO
+		tipovi=null;
 	}
 	public Cvor(String ime1, String redak1, String ime_iz_koda1, Cvor roditelj1, int razina1, int index1){
 		ime=ime1;
@@ -41,6 +47,8 @@ public class Cvor {
 		index=index1;
 		tip=null;
 		l_izraz=false;
+		//TODO
+		tipovi=null;
 	}
 	
 	@Override
@@ -60,6 +68,15 @@ public class Cvor {
 	public String samo_ovaj_cvor(){
 		return ime+" "+tip+" "+l_izraz+" "+razina;
 	}
+	//ja cu se ubit
+	/*public void ntip(int redniBroj, String noviNtip){
+		Cvor cvor=djeca.get(redniBroj);
+		Cvor noviCvor = new Cvor(cvor.ime, cvor.redak, cvor.ime_iz_koda, cvor.roditelj, cvor.razina, cvor.index);
+		noviCvor.ntip = noviNtip;
+		System.out.print("wtf:"+noviCvor.ntip);
+		djeca.set(redniBroj, noviCvor);
+		System.out.print("wtf2:"+djeca.get(1).ntip);
+	}*/
 	
 	public String trenutacna_produkcija(){
 		String a=ime+" ::=";

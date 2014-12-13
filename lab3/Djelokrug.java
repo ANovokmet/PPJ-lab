@@ -1,9 +1,10 @@
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map.Entry;
 
 
 public class Djelokrug {
-	public ArrayList<Djelokrug> djecaDjelokrug;//nepotrebno?
+	public ArrayList<Djelokrug> djecaDjelokrug;//nepotrebno? potrebno je
 	public Djelokrug roditeljDjelokrug;//ugnjezdujuci blok
 	public ArrayList<Cvor> cvorovi;
 	
@@ -14,6 +15,11 @@ public class Djelokrug {
 	public Djelokrug(Djelokrug roditeljDjelokrug){
 		this.tablica_lokalnih_imena = new HashMap<String, Informacija>();
 		this.roditeljDjelokrug = roditeljDjelokrug;
+		this.djecaDjelokrug = new ArrayList<Djelokrug>();
+		
+		if(roditeljDjelokrug!=null){//ako nije korijen
+			roditeljDjelokrug.djecaDjelokrug.add(this);
+		}
 	}
 	
 	public void dodajIdentifikatorUTablicu(String tip, String naziv){
@@ -67,6 +73,32 @@ public class Djelokrug {
 		else{
 			return false;
 		}
+		
+	}
+
+
+	public boolean lokalniSadrziIdn(String ime) {
+		if(tablica_lokalnih_imena.containsKey(ime)){
+			return true;
+		}
+		return false;
+	}
+	
+	public HashMap<String, Informacija> vratiDeklariraneFje(){
+		HashMap<String, Informacija> tablica_deklariranih_fja = new HashMap<String, Informacija>();
+		for(Entry<String, Informacija> deklaracija:tablica_lokalnih_imena.entrySet()){
+			if(deklaracija.getValue().isFunkcija == true){
+				tablica_deklariranih_fja.put(deklaracija.getKey(), tablica_lokalnih_imena.get(deklaracija.getKey()));
+			}
+		}
+		
+		if(!djecaDjelokrug.isEmpty()){
+			for(Djelokrug dijete:djecaDjelokrug){
+				tablica_deklariranih_fja.putAll(dijete.vratiDeklariraneFje());
+			}
+		}
+		
+		return tablica_deklariranih_fja;
 		
 	}
 }
