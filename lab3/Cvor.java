@@ -9,20 +9,35 @@ public class Cvor {
 	public String ime_iz_koda;
 	public ArrayList<Cvor> djeca;
 	public Cvor roditelj;
-	public String tip;
+	public Informacija inf;//sadrzi sve o tipu
 	public String ntip;
-	public boolean l_izraz;//boolean
+	//public boolean l_izraz;//boolean
 	public int razina;  //dubina u stablu
 	public int index;   //index u listi objekata, koristi se pri stvaranju stabla
-	
-	public ArrayList<String> tipovi;
-	public int br_elem;
-	
 	
 	private static ArrayList<HashMap<String,String>> lista;
 	
 	public Cvor(){
 		
+	}
+	
+	public String getTip(){
+		return inf.tip;
+	}
+	
+	public void setTip(String tip){
+		if(inf==null){
+			inf = new Informacija(tip);
+		}
+		inf.tip = tip;
+	}
+	
+	public boolean isFunkcija(){
+		return inf.isFunkcija;
+	}
+	
+	public ArrayList<Informacija> argumenti(){
+		return inf.argumenti;
 	}
 	
 	public Cvor(String ime1, Cvor roditelj1, int razina1, int index1){
@@ -32,11 +47,10 @@ public class Cvor {
 		roditelj=roditelj1;
 		razina=razina1;
 		index=index1;
-		tip=null;
+		inf=null;
 		ntip=null;
-		l_izraz=false;
-		//TODO
-		tipovi=null;
+		//l_izraz=false;
+		
 	}
 	public Cvor(String ime1, String redak1, String ime_iz_koda1, Cvor roditelj1, int razina1, int index1){
 		ime=ime1;
@@ -45,10 +59,9 @@ public class Cvor {
 		roditelj=roditelj1;
 		razina=razina1;
 		index=index1;
-		tip=null;
-		l_izraz=false;
-		//TODO
-		tipovi=null;
+		inf=null;
+		//l_izraz=false;
+		
 	}
 	
 	@Override
@@ -66,7 +79,7 @@ public class Cvor {
 	}
 	
 	public String samo_ovaj_cvor(){
-		return ime+" "+tip+" "+l_izraz+" "+razina;
+		return ime+" "+inf.tip+" "+inf.l_izraz+" "+razina;
 	}
 	//ja cu se ubit
 	/*public void ntip(int redniBroj, String noviNtip){
