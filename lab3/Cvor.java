@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class Cvor {
-	public String ime;
+	private String ime;
 	public String redak;
 	public String ime_iz_koda;
 	public ArrayList<Cvor> djeca;
@@ -19,6 +19,11 @@ public class Cvor {
 	
 	public Cvor(){
 		
+	}
+	
+
+	public String getImeCvora(){
+		return ime;
 	}
 	
 	public String getTip(){
@@ -36,8 +41,8 @@ public class Cvor {
 		return inf.isFunkcija;
 	}
 	
-	public ArrayList<Informacija> argumenti(){
-		return inf.argumenti;
+	public ArrayList<String> tipovi(){
+		return inf.tipovi;
 	}
 	
 	public Cvor(String ime1, Cvor roditelj1, int razina1, int index1){

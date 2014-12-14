@@ -9,6 +9,7 @@ public class Djelokrug {
 	public ArrayList<Cvor> cvorovi;
 	
 	public String uFunkciji;
+	public boolean uPetlji;
 	
 	public HashMap<String, Informacija> tablica_lokalnih_imena;
 	
@@ -16,9 +17,22 @@ public class Djelokrug {
 		this.tablica_lokalnih_imena = new HashMap<String, Informacija>();
 		this.roditeljDjelokrug = roditeljDjelokrug;
 		this.djecaDjelokrug = new ArrayList<Djelokrug>();
+		this.uPetlji = false;
 		
 		if(roditeljDjelokrug!=null){//ako nije korijen
 			roditeljDjelokrug.djecaDjelokrug.add(this);
+		}
+	}
+	
+	public boolean uPetlji(){
+		if(roditeljDjelokrug==null){
+			return uPetlji;
+		}
+		else if(!uPetlji){
+			return roditeljDjelokrug.uPetlji();
+		}
+		else{
+			return uPetlji;
 		}
 	}
 	
@@ -26,8 +40,8 @@ public class Djelokrug {
 		tablica_lokalnih_imena.put(naziv, new Informacija(tip));
 	}
 	
-	public Informacija dodajFunkcijuUTablicu(String tip, String naziv, ArrayList<Informacija> argumenti){
-		Informacija novaFunkcija = new Informacija(tip, argumenti);
+	public Informacija dodajFunkcijuUTablicu(String tip, String naziv, ArrayList<String> tipovi){
+		Informacija novaFunkcija = new Informacija(tip, tipovi);
 		tablica_lokalnih_imena.put(naziv, novaFunkcija);
 		return novaFunkcija;
 	}

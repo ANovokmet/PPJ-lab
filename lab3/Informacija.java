@@ -1,31 +1,60 @@
 import java.util.ArrayList;
+import java.util.HashMap;
 
 
 public class Informacija {
 	private String vrijednost;
 	public String tip;
+	public String ime;
 	public boolean isFunkcija;
 	public boolean isDefinirana;
-	public ArrayList<Informacija> argumenti;//parametri
+	//public HashMap<String,String> parametri;//parametri-Map<String, String>
 	public boolean l_izraz;
 	
+	public ArrayList<String> tipovi;
+	public ArrayList<String> imena;
 	
-	public ArrayList<String> tipovi;//za niz
-	public int br_elem;
+	public int br_elem;//za niz
 	
-	
-	public Informacija(String tip, ArrayList<Informacija> argumenti){
+		
+	public Informacija(String tip, ArrayList<String> tipovi, ArrayList<String> imena){
 		this.tip = tip;
-		this.argumenti = argumenti;
+		if(tipovi != null){
+			this.tipovi = new ArrayList<String>(tipovi);
+		}
+		else{
+			this.tipovi = null;//mozda i bez init
+		}
+		
+		if(imena != null){
+			this.imena = new ArrayList<String>(imena);
+		}
+		else{
+			this.imena = null;
+		}
 		this.isFunkcija = true;
 		this.l_izraz = false;
+	}
+	
+	public Informacija(String tip, ArrayList<String> tipovi){
+		this.tip = tip;
+		if(tipovi != null){
+			this.tipovi = new ArrayList<String>(tipovi);
+		}
+		else{
+			this.tipovi = null;//mozda i bez init
+		}
 		
+		this.imena = null;
+		this.isFunkcija = true;
+		this.l_izraz = false;
 	}
 	
 	public Informacija(String tip) {
 		this.tip = tip;
 		this.isFunkcija = false;
 		
+		//cudno-moguce da netreba
 		if(tip.equals("int") || tip.equals("char")){
 			l_izraz=true;
 		}
