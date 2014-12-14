@@ -55,9 +55,17 @@ public class Informacija {
 		this.isFunkcija = false;
 		
 		//cudno-moguce da netreba
-		if(tip.equals("int") || tip.equals("char")){
-			l_izraz=true;
+		if(tip!=null){
+			if(tip.equals("int") || tip.equals("char")){
+				l_izraz=true;
+			}
 		}
+	}
+
+	public Informacija(String tip, int br_elem) {
+		this.tip = tip;
+		this.isFunkcija = false;
+		this.br_elem = br_elem;
 	}
 
 	public void setVrijednost(String vrijednost){

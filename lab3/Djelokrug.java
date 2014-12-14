@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map.Entry;
 
 
@@ -12,6 +13,16 @@ public class Djelokrug {
 	public boolean uPetlji;
 	
 	public HashMap<String, Informacija> tablica_lokalnih_imena;
+	
+	public static ArrayList<String> deklFjeImena;
+	public static ArrayList<String> deklFjeTipovi;
+	public static ArrayList<ArrayList<String>> deklFjeTipoviPar;
+	static {
+		deklFjeImena = new ArrayList<String>();
+		deklFjeTipovi = new ArrayList<String>();
+		deklFjeTipoviPar = new ArrayList<ArrayList<String>>();
+	}
+	
 	
 	public Djelokrug(Djelokrug roditeljDjelokrug){
 		this.tablica_lokalnih_imena = new HashMap<String, Informacija>();
@@ -40,9 +51,18 @@ public class Djelokrug {
 		tablica_lokalnih_imena.put(naziv, new Informacija(tip));
 	}
 	
+	public void dodajNizUTablicu(String tip, String naziv, int br_elem){
+		tablica_lokalnih_imena.put(naziv, new Informacija(tip, br_elem));
+	}
+	
 	public Informacija dodajFunkcijuUTablicu(String tip, String naziv, ArrayList<String> tipovi){
 		Informacija novaFunkcija = new Informacija(tip, tipovi);
 		tablica_lokalnih_imena.put(naziv, novaFunkcija);
+		
+		deklFjeImena.add(naziv);
+		deklFjeTipovi.add(tip);
+		deklFjeTipoviPar.add(tipovi);
+		
 		return novaFunkcija;
 	}
 	
@@ -98,7 +118,7 @@ public class Djelokrug {
 		return false;
 	}
 	
-	public HashMap<String, Informacija> vratiDeklariraneFje(){
+	public HashMap<String, Informacija> vratiDeklariraneFje(){//nevalja zbog drugih parametara a istih imena
 		HashMap<String, Informacija> tablica_deklariranih_fja = new HashMap<String, Informacija>();
 		for(Entry<String, Informacija> deklaracija:tablica_lokalnih_imena.entrySet()){
 			if(deklaracija.getValue().isFunkcija == true){
