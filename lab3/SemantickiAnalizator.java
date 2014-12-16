@@ -1,6 +1,7 @@
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -21,7 +22,7 @@ public class SemantickiAnalizator {
 		definiraneFunkcije = new HashMap<String, Informacija>();
 		trenutnaFunkcija = null;
 		
-		BufferedReader bf = new BufferedReader(new FileReader("primjeri/integration/main.in"));
+		BufferedReader bf = new BufferedReader(new InputStreamReader(System.in));
 		Cvor glavni = Cvor.stvori_stablo_iz_filea(bf);
 		
 		
@@ -222,9 +223,6 @@ public class SemantickiAnalizator {
 		
 		if(cvor.trenutacna_produkcija().equals("<unarni_izraz> ::= <postfiks_izraz>")){
 			provjeri(cvor.djeca.get(0));
-			
-			
-			System.out.print(cvor.djeca.get(0).inf.tip);
 			
 			cvor.initTip(cvor.djeca.get(0).inf);
 			
@@ -1070,7 +1068,6 @@ public class SemantickiAnalizator {
 					}
 				}
 				else{
-					System.out.print("ovagreska");
 					ispisiGresku(cvor);
 				}
 				
@@ -1182,10 +1179,7 @@ public class SemantickiAnalizator {
 				System.exit(0);
 		}
 		//ako postoji (bilodi)deklarirana a ne definirana fja
-		for(int i=0;i<globalniDjelokrug.deklFjeImena.size();i++){
-			System.out.println(globalniDjelokrug.deklFjeImena.get(i)+globalniDjelokrug.deklFjeTipovi.get(i));
-			System.out.println(globalniDjelokrug.deklFjeTipoviPar.get(i));
-		}
+
 		
 		
 		for(int i=0;i<globalniDjelokrug.deklFjeImena.size();i++){
