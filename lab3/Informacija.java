@@ -48,7 +48,7 @@ public class Informacija {
 			this.tipovi = new ArrayList<String>(tipovi);
 		}
 		else{
-			this.tipovi = null;//mozda i bez init
+			this.tipovi = new ArrayList<String>();;//mozda i bez init
 		}
 		
 		this.imena = null;//cudno ovaj null

@@ -22,10 +22,10 @@ public class SemantickiAnalizator {
 		definiraneFunkcije = new HashMap<String, Informacija>();
 		trenutnaFunkcija = null;
 		
-		BufferedReader bf = new BufferedReader(new InputStreamReader(System.in));
+		
+		//BufferedReader bf = new BufferedReader(new InputStreamReader(System.in));
+		BufferedReader bf = new BufferedReader(new FileReader("tp/03b70a1caba049785b7c55ed8494a101.in"));
 		Cvor glavni = Cvor.stvori_stablo_iz_filea(bf);
-		
-		
 		
 		
 		globalniDjelokrug = new Djelokrug(null);
@@ -36,8 +36,6 @@ public class SemantickiAnalizator {
 		
 		provjeraNakonObilaska();
 		
-		String a="niz const char";
-		String b="niz int";
 		
 	}
 
@@ -88,26 +86,25 @@ public class SemantickiAnalizator {
 		}
 		if(cvor.trenutacna_produkcija().equals("<primarni_izraz> ::= NIZ_ZNAKOVA")){
 			//niz mora bit ispravan po 4.3.2
+			
 			if(!nizZnakovaIspravan(cvor.djeca.get(0).ime_iz_koda)){
 				ispisiGresku(cvor);
 			}
 			
 			cvor.setTip("niz const char");
 			cvor.inf.l_izraz = false;
-
 		}
 		if(cvor.trenutacna_produkcija().equals("<primarni_izraz> ::= L_ZAGRADA <izraz> D_ZAGRADA")){
 			provjeri(cvor.djeca.get(1));
-			
 			cvor.initTip(cvor.djeca.get(1).inf);
+			
 		}
 		
 		if(cvor.trenutacna_produkcija().equals("<postfiks_izraz> ::= <primarni_izraz>")){
+			
 			provjeri(cvor.djeca.get(0));
 			
-			
 			cvor.initTip(cvor.djeca.get(0).inf);
-			
 			
 		}		
 		//TODO ups fali jedna
@@ -223,7 +220,7 @@ public class SemantickiAnalizator {
 		
 		if(cvor.trenutacna_produkcija().equals("<unarni_izraz> ::= <postfiks_izraz>")){
 			provjeri(cvor.djeca.get(0));
-			
+
 			cvor.initTip(cvor.djeca.get(0).inf);
 			
 			
@@ -428,7 +425,6 @@ public class SemantickiAnalizator {
 			provjeri(cvor.djeca.get(0));
 			
 			cvor.initTip(cvor.djeca.get(0).inf);
-			
 		}
 		//isto isti
 		if(cvor.trenutacna_produkcija().equals("<bin_i_izraz> ::= <bin_i_izraz> OP_BIN_I <jednakosni_izraz>")){
@@ -550,7 +546,6 @@ public class SemantickiAnalizator {
 			provjeri(cvor.djeca.get(0));
 			
 			cvor.initTip(cvor.djeca.get(0).inf);
-			
 			
 		}
 		if(cvor.trenutacna_produkcija().equals("<izraz_pridruzivanja> ::= <postfiks_izraz> OP_PRIDRUZI <izraz_pridruzivanja>")){
@@ -746,19 +741,22 @@ public class SemantickiAnalizator {
 			provjeri(ime_tipa);
 			
 			if(ime_tipa.getTip().startsWith("const ")){
+				
 				ispisiGresku(cvor);
 			}
 			
 			Cvor IDN = cvor.djeca.get(1);
 			if(definiraneFunkcije.containsKey(IDN.ime_iz_koda)){
+				
 				ispisiGresku(cvor);
 			}
 			
 			if(globalniDjelokrug.sadrziIdn(IDN.ime_iz_koda)){
 				Informacija deklaracija = globalniDjelokrug.getIdentifikator(IDN.ime_iz_koda);
-				
-				if(!deklaracija.tip.equals(ime_tipa.inf) || !deklaracija.tipovi.isEmpty()
+
+				if(!deklaracija.tip.equals(ime_tipa.inf.tip) || !deklaracija.tipovi.isEmpty()
 						|| deklaracija.isFunkcija!=true){
+					
 					ispisiGresku(cvor);
 				}
 			}
@@ -956,7 +954,6 @@ public class SemantickiAnalizator {
 			
 			if(izravni_deklarator.getTip().startsWith("const") || izravni_deklarator.getTip().startsWith(T)){
 				
-				
 				if(!implicitnoPretvoriva(inicijalizator.inf, T)){
 					ispisiGresku(cvor);
 				}
@@ -982,10 +979,12 @@ public class SemantickiAnalizator {
 			Cvor IDN = cvor.djeca.get(0);
 			
 			if(cvor.ntip.equals("void")){
+				
 				ispisiGresku(cvor);
 			}
 			
 			if(trenutniDjelokrug.lokalniSadrziIdn(IDN.ime_iz_koda)){
+				
 				ispisiGresku(cvor);
 			}
 			
@@ -1059,8 +1058,9 @@ public class SemantickiAnalizator {
 			if(trenutniDjelokrug.tablica_lokalnih_imena.containsKey(IDN.ime_iz_koda)){
 				Informacija deklaracija = trenutniDjelokrug.tablica_lokalnih_imena.get(IDN.ime_iz_koda);
 				//cudno-usporediti duljine?
+				
 				if(deklaracija.tipovi.size()==lista_parametara.inf.tipovi.size() && deklaracija.isFunkcija==true
-						&& deklaracija.tip.equals(lista_parametara.getTip())){
+						&& deklaracija.tip.equals(cvor.ntip)){
 					for(int i=0;i<deklaracija.tipovi.size();i++){
 						if(!deklaracija.tipovi.get(i).equals(lista_parametara.inf.tipovi.get(i))){
 							ispisiGresku(cvor);
@@ -1093,10 +1093,10 @@ public class SemantickiAnalizator {
 			}
 			if(provjera.getImeCvora().equals("NIZ_ZNAKOVA")){
 				
-				cvor.initTip(new Informacija());
+				cvor.initTip(cvor.djeca.get(0).inf);
 				cvor.inf.br_elem = provjera.ime_iz_koda.length()-2+1;//zbog navodnika cudno
 				for(int i=0;i<cvor.inf.br_elem;i++){
-					cvor.inf.tipovi.add("char");					
+					cvor.inf.tipovi.add("char");				
 				}
 			}
 			else{
@@ -1232,11 +1232,11 @@ public class SemantickiAnalizator {
 				char drugi = s.charAt(i+1);
 			    
 			    if(prvi == '\\' && (
-		    		drugi != 't' || 
-					drugi != 'n' || 
-					drugi != '0' || 
-					drugi != '\'' || 
-					drugi != '\"' || 
+		    		drugi != 't' && 
+					drugi != 'n' && 
+					drugi != '0' && 
+					drugi != '\'' && 
+					drugi != '\"' && 
 					drugi != '\\' )){
 			    	return false;
 			    }
@@ -1335,6 +1335,7 @@ public class SemantickiAnalizator {
 				System.out.print("("+dijete.redak+","+dijete.ime_iz_koda+")");
 			}
 		}
+		System.out.println();
 		System.exit(0);
 	}
 }

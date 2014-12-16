@@ -93,15 +93,6 @@ public class Cvor {
 	public String samo_ovaj_cvor(){
 		return ime+" "+inf.tip+" "+inf.l_izraz+" "+razina;
 	}
-	//ja cu se ubit
-	/*public void ntip(int redniBroj, String noviNtip){
-		Cvor cvor=djeca.get(redniBroj);
-		Cvor noviCvor = new Cvor(cvor.ime, cvor.redak, cvor.ime_iz_koda, cvor.roditelj, cvor.razina, cvor.index);
-		noviCvor.ntip = noviNtip;
-		System.out.print("wtf:"+noviCvor.ntip);
-		djeca.set(redniBroj, noviCvor);
-		System.out.print("wtf2:"+djeca.get(1).ntip);
-	}*/
 	
 	public String trenutacna_produkcija(){
 		String a=ime+" ::=";
@@ -139,12 +130,13 @@ public class Cvor {
 		ArrayList<Cvor> djeca = new ArrayList<Cvor>();
 		for(int i=roditelj.index+1;i<=raspon_djece(roditelj.index);i++){
 			if(Integer.parseInt(lista.get(i).get("stupanj"))==roditelj.razina+1){
-				String a[] = lista.get(i).get("objekt").split("\\ ");
+				String a[] = lista.get(i).get("objekt").split("\\ ", 3);
 				Cvor sljedeci;
 				if(a.length==3)
 					sljedeci = new Cvor(a[0],a[1],a[2],roditelj,roditelj.razina+1,i);
 				else
 					sljedeci = new Cvor(lista.get(i).get("objekt"),roditelj,roditelj.razina+1,i);
+				
 				djeca.add(sljedeci);
 				stvori_cvorove(sljedeci);
 			}
