@@ -48,7 +48,17 @@ public class Djelokrug {
 	}
 	
 	public void dodajIdentifikatorUTablicu(String tip, String naziv){
-		tablica_lokalnih_imena.put(naziv, new Informacija(tip));
+		Informacija novaInf = new Informacija(tip);
+		
+		if(tip.equals("int") || tip.equals("char")){
+			novaInf.l_izraz=true;
+		}
+		else{
+			novaInf.l_izraz=false;
+		}
+		
+		tablica_lokalnih_imena.put(naziv, novaInf);
+		
 	}
 	
 	public void dodajNizUTablicu(String tip, String naziv, int br_elem){

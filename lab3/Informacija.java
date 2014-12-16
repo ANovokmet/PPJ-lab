@@ -16,6 +16,12 @@ public class Informacija {
 	
 	public int br_elem;//za niz
 	
+	public Informacija(){
+		this.tip = null;
+		this.tipovi = new ArrayList<String>();
+		this.imena = new ArrayList<String>();
+	}
+	
 		
 	public Informacija(String tip, ArrayList<String> tipovi, ArrayList<String> imena){
 		this.tip = tip;
@@ -45,7 +51,7 @@ public class Informacija {
 			this.tipovi = null;//mozda i bez init
 		}
 		
-		this.imena = null;
+		this.imena = null;//cudno ovaj null
 		this.isFunkcija = true;
 		this.l_izraz = false;
 	}
@@ -53,19 +59,30 @@ public class Informacija {
 	public Informacija(String tip) {
 		this.tip = tip;
 		this.isFunkcija = false;
-		
-		//cudno-moguce da netreba
-		if(tip!=null){
-			if(tip.equals("int") || tip.equals("char")){
-				l_izraz=true;
-			}
-		}
+		this.tipovi = new ArrayList<String>();
+		this.imena = new ArrayList<String>();
 	}
 
 	public Informacija(String tip, int br_elem) {
 		this.tip = tip;
 		this.isFunkcija = false;
 		this.br_elem = br_elem;
+	}
+
+	public Informacija(Informacija informacija) {
+		this.tip = informacija.tip;
+		this.l_izraz = informacija.l_izraz;
+		this.isFunkcija = informacija.isFunkcija;
+		
+		if(informacija.tipovi!=null)
+			this.tipovi = new ArrayList<String>(informacija.tipovi);
+		else
+			this.tipovi = new ArrayList<String>();
+		
+		if(informacija.imena!=null)
+			this.imena = new ArrayList<String>(informacija.imena);
+		else
+			this.imena = new ArrayList<String>();
 	}
 
 	public void setVrijednost(String vrijednost){

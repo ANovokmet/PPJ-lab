@@ -25,6 +25,13 @@ public class Cvor {
 	public String getImeCvora(){
 		return ime;
 	}
+	//posalji informaicju
+	
+	public Informacija initTip(Informacija informacija){
+		this.inf = new Informacija(informacija);
+		return this.inf;
+	}
+	
 	
 	public String getTip(){
 		return inf.tip;

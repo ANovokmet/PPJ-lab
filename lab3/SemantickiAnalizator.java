@@ -1,10 +1,10 @@
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map.Entry;
+
+import javax.management.timer.Timer;
 
 
 
@@ -21,7 +21,7 @@ public class SemantickiAnalizator {
 		definiraneFunkcije = new HashMap<String, Informacija>();
 		trenutnaFunkcija = null;
 		
-		BufferedReader bf = new BufferedReader(new FileReader("primjeri/30_const_init/test.in"));
+		BufferedReader bf = new BufferedReader(new FileReader("primjeri/integration/main.in"));
 		Cvor glavni = Cvor.stvori_stablo_iz_filea(bf);
 		System.out.println(glavni);
 		System.out.println(glavni.trenutacna_produkcija());
@@ -47,11 +47,16 @@ public class SemantickiAnalizator {
 			System.out.println(trenutniDjelokrug.tablica_lokalnih_imena.get(0));
 			if(trenutniDjelokrug.getIdentifikator(IDN.ime_iz_koda)!=null){
 				
-				cvor.setTip(trenutniDjelokrug.getIdentifikator(IDN.ime_iz_koda).tip);
-				System.out.println(IDN.ime_iz_koda+"=YOLO="+cvor.getTip());
-				cvor.inf.l_izraz = trenutniDjelokrug.getIdentifikator(IDN.ime_iz_koda).l_izraz;//l_izraz je samo ako je char/int bez const
-				cvor.inf.tipovi= trenutniDjelokrug.getIdentifikator(IDN.ime_iz_koda).tipovi;
-				cvor.inf.isFunkcija = trenutniDjelokrug.getIdentifikator(IDN.ime_iz_koda).isFunkcija;
+				
+				//System.out.println(IDN.ime_iz_koda+"=YOLO="+cvor.getTip());
+				
+				/*cvor.setTip(trenutniDjelokrug.getIdentifikator(IDN.ime_iz_koda).tip);
+				cvor.inf.l_izraz = trenutniDjelokrug.getIdentifikator(IDN.ime_iz_koda).l_izraz;                             //l_izraz je samo ako je char/int bez const
+				cvor.inf.tipovi = trenutniDjelokrug.getIdentifikator(IDN.ime_iz_koda).tipovi;
+				cvor.inf.isFunkcija = trenutniDjelokrug.getIdentifikator(IDN.ime_iz_koda).isFunkcija;*/
+				
+				cvor.initTip(trenutniDjelokrug.getIdentifikator(IDN.ime_iz_koda));
+				
 				System.out.println(cvor.inf.isFunkcija);
 				System.out.println("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAaa");
 			}
@@ -93,18 +98,14 @@ public class SemantickiAnalizator {
 		if(cvor.trenutacna_produkcija().equals("<primarni_izraz> ::= L_ZAGRADA <izraz> D_ZAGRADA")){
 			provjeri(cvor.djeca.get(1));
 			System.out.println("PRINT2"+cvor.djeca.get(1).getTip());
-			cvor.setTip(cvor.djeca.get(1).getTip());
-			cvor.inf.l_izraz = cvor.djeca.get(1).inf.l_izraz;
-			cvor.inf = cvor.djeca.get(1).inf;
+			cvor.initTip(cvor.djeca.get(1).inf);
 		}
 		
 		if(cvor.trenutacna_produkcija().equals("<postfiks_izraz> ::= <primarni_izraz>")){
 			provjeri(cvor.djeca.get(0));
 			
 			System.out.println("PRINT"+cvor.djeca.get(0).getTip());
-			cvor.setTip(cvor.djeca.get(0).getTip());
-			cvor.inf.l_izraz = cvor.djeca.get(0).inf.l_izraz;
-			cvor.inf.isFunkcija = cvor.djeca.get(0).inf.isFunkcija;//cudno redundancija
+			cvor.initTip(cvor.djeca.get(0).inf);
 			System.out.println(cvor.inf.isFunkcija);
 			System.out.println(cvor.getTip()+" pi "+cvor.djeca.get(0).getTip());
 		}		
@@ -118,7 +119,7 @@ public class SemantickiAnalizator {
 				ispisiGresku(cvor);
 			}
 			provjeri(izraz);
-			if(!implicitnoPretvoriva(izraz.getTip(), "int")){
+			if(!implicitnoPretvoriva(izraz.inf, "int")){
 				ispisiGresku(cvor);
 			}
 			String X = postfiks_izraz.getTip().substring(4);
@@ -148,7 +149,7 @@ public class SemantickiAnalizator {
 			System.out.println(postfiks_izraz.inf.isFunkcija);
 			System.out.println(postfiks_izraz.inf.tipovi==null);
 			
-			if(postfiks_izraz.inf.tipovi!=null || postfiks_izraz.inf.isFunkcija != true){//cudno, jel fja smije bit void?
+			if(!postfiks_izraz.inf.tipovi.isEmpty() || postfiks_izraz.inf.isFunkcija != true){//cudno, jel fja smije bit void?
 				ispisiGresku(cvor);
 			}
 			cvor.setTip(postfiks_izraz.getTip());
@@ -158,13 +159,13 @@ public class SemantickiAnalizator {
 		if(cvor.trenutacna_produkcija().equals("<postfiks_izraz> ::= <postfiks_izraz> L_ZAGRADA <lista_argumenata> D_ZAGRADA")){
 			Cvor postfiks_izraz = cvor.djeca.get(0);
 			Cvor lista_argumenata = cvor.djeca.get(2);
-			
+			//cudno doraditi
 			provjeri(postfiks_izraz);
 			provjeri(lista_argumenata);
 			//cudno, jel fja smije bit void?
 			System.out.println("dosao dovde");
 			System.out.println(lista_argumenata.inf.tipovi.size());
-			if(postfiks_izraz.inf.tipovi!=null && postfiks_izraz.inf.isFunkcija == true && lista_argumenata.inf.tipovi.size()==postfiks_izraz.inf.tipovi.size()){//cudno-postfix.tip=fja(params->pov)
+			if(!postfiks_izraz.inf.tipovi.isEmpty() && postfiks_izraz.inf.isFunkcija == true && lista_argumenata.inf.tipovi.size()==postfiks_izraz.inf.tipovi.size()){//cudno-postfix.tip=fja(params->pov)
 				ArrayList<String> arg_tipovi= lista_argumenata.inf.tipovi;//jel tipovi il parametri?
 				ArrayList<String> param_tipovi= postfiks_izraz.inf.tipovi;
 				System.out.println("prosao ovdje"+param_tipovi.size());
@@ -192,7 +193,7 @@ public class SemantickiAnalizator {
 			
 			Cvor postfiks_izraz = cvor.djeca.get(0);
 			provjeri(postfiks_izraz);
-			if(postfiks_izraz.inf.l_izraz!=true || !implicitnoPretvoriva(postfiks_izraz.getTip(), "int")){
+			if(postfiks_izraz.inf.l_izraz!=true || !implicitnoPretvoriva(postfiks_izraz.inf, "int")){
 				ispisiGresku(cvor);
 			}
 			
@@ -204,8 +205,7 @@ public class SemantickiAnalizator {
 		if(cvor.trenutacna_produkcija().equals("<lista_argumenata> ::= <izraz_pridruzivanja>")){
 			provjeri(cvor.djeca.get(0));
 			
-			cvor.inf = new Informacija(null);//cudno nema inf
-			cvor.inf.tipovi = new ArrayList<String>();//cudno-mozda da stavim inic u informaciju
+			cvor.inf = new Informacija();//cudno nema inf
 			cvor.inf.tipovi.add(cvor.djeca.get(0).getTip());
 		}
 		if(cvor.trenutacna_produkcija().equals("<lista_argumenata> ::= <lista_argumenata> ZAREZ <izraz_pridruzivanja>")){
@@ -215,8 +215,7 @@ public class SemantickiAnalizator {
 			provjeri(lista_argumenata);
 			provjeri(izraz_pridruzivanja);
 			
-			cvor.inf = new Informacija(null);//cudno nema inf
-			cvor.inf.tipovi = new ArrayList<String>();//cudno-mozda inic->informaciuj
+			cvor.inf = new Informacija();//cudno nema inf
 			cvor.inf.tipovi.addAll(lista_argumenata.inf.tipovi);
 			cvor.inf.tipovi.add(izraz_pridruzivanja.getTip());
 		}
@@ -227,9 +226,8 @@ public class SemantickiAnalizator {
 			System.out.println("what------");
 			System.out.print(cvor.djeca.get(0).inf.tip);
 			
-			cvor.setTip(cvor.djeca.get(0).getTip());
-			cvor.inf.l_izraz = cvor.djeca.get(0).inf.l_izraz;
-			cvor.inf.isFunkcija = cvor.djeca.get(0).inf.isFunkcija;
+			cvor.initTip(cvor.djeca.get(0).inf);
+			
 			System.out.println(cvor.inf.isFunkcija);
 			System.out.println(cvor.getTip()+" li "+cvor.djeca.get(0).getTip());
 		}
@@ -240,7 +238,7 @@ public class SemantickiAnalizator {
 			provjeri(unarni_izraz);
 			
 			
-			if(unarni_izraz.inf.l_izraz!=true || !implicitnoPretvoriva(unarni_izraz.getTip(),"int")){
+			if(unarni_izraz.inf.l_izraz!=true || !implicitnoPretvoriva(unarni_izraz.inf,"int")){
 				ispisiGresku(cvor);
 			}
 			
@@ -250,7 +248,7 @@ public class SemantickiAnalizator {
 		
 		if(cvor.trenutacna_produkcija().equals("<unarni_izraz> ::= <unarni_operator> <cast_izraz>")){//za <unarni_operator> nist
 			provjeri(cvor.djeca.get(1));
-			if(!implicitnoPretvoriva(cvor.djeca.get(1).getTip(), "int")){
+			if(!implicitnoPretvoriva(cvor.djeca.get(1).inf, "int")){
 				ispisiGresku(cvor);
 			}
 			
@@ -268,9 +266,7 @@ public class SemantickiAnalizator {
 		if(cvor.trenutacna_produkcija().equals("<cast_izraz> ::= <unarni_izraz>")){
 			provjeri(cvor.djeca.get(0));
 			
-			cvor.setTip(cvor.djeca.get(0).getTip());
-			cvor.inf.l_izraz = cvor.djeca.get(0).inf.l_izraz;
-			cvor.inf.isFunkcija = cvor.djeca.get(0).inf.isFunkcija;
+			cvor.initTip(cvor.djeca.get(0).inf);
 			System.out.println(cvor.inf.isFunkcija);
 			System.out.println(cvor.getTip()+" ci "+cvor.djeca.get(0).getTip());
 		}
@@ -286,12 +282,11 @@ public class SemantickiAnalizator {
 			
 			System.out.println(cast_izraz.isFunkcija());
 			System.out.println("JESL FUNKCIJA"+cast_izraz.getTip()+ ime_tipa.getTip());
-			if(!eksplicitnoPretvoriva(cast_izraz.getTip(), ime_tipa.getTip()) || cast_izraz.isFunkcija()){
+			if(!eksplicitnoPretvoriva(cast_izraz.getTip(), ime_tipa.getTip()) || cast_izraz.isFunkcija() || ime_tipa.isFunkcija()){//cudno ime_tipa.isFunkcija()
 				ispisiGresku(cvor);
 			}
 			//TODO greska u castanju (int)main. dozvoljene samo nad 
-			cvor.setTip(ime_tipa.inf.tip);
-			cvor.inf.isFunkcija = cvor.djeca.get(1).isFunkcija();
+			cvor.initTip(ime_tipa.inf);
 			cvor.inf.l_izraz = false;
 		}
 		
@@ -324,9 +319,7 @@ public class SemantickiAnalizator {
 		if(cvor.trenutacna_produkcija().equals("<multiplikativni_izraz> ::= <cast_izraz>")){
 			provjeri(cvor.djeca.get(0));
 			
-			cvor.setTip(cvor.djeca.get(0).getTip());
-			cvor.inf.l_izraz = cvor.djeca.get(0).inf.l_izraz;
-			cvor.inf.isFunkcija = cvor.djeca.get(0).inf.isFunkcija;
+			cvor.initTip(cvor.djeca.get(0).inf);
 			System.out.println(cvor.inf.isFunkcija);
 		}
 		if(cvor.trenutacna_produkcija().equals("<multiplikativni_izraz> ::= <multiplikativni_izraz> OP_PUTA <cast_izraz>")
@@ -334,12 +327,12 @@ public class SemantickiAnalizator {
 				|| cvor.trenutacna_produkcija().equals("<multiplikativni_izraz> ::= <multiplikativni_izraz> OP_MOD <cast_izraz>")){
 			
 			provjeri(cvor.djeca.get(0));
-			if(!implicitnoPretvoriva(cvor.djeca.get(0).getTip(), "int")){
+			if(!implicitnoPretvoriva(cvor.djeca.get(0).inf, "int")){
 				ispisiGresku(cvor);
 			}
 			
 			provjeri(cvor.djeca.get(2));
-			if(!implicitnoPretvoriva(cvor.djeca.get(2).getTip(), "int")){
+			if(!implicitnoPretvoriva(cvor.djeca.get(2).inf, "int")){
 				ispisiGresku(cvor);
 			}
 			
@@ -351,9 +344,7 @@ public class SemantickiAnalizator {
 		if(cvor.trenutacna_produkcija().equals("<aditivni_izraz> ::= <multiplikativni_izraz>")){
 			provjeri(cvor.djeca.get(0));
 			
-			cvor.setTip(cvor.djeca.get(0).getTip());
-			cvor.inf.l_izraz = cvor.djeca.get(0).inf.l_izraz;
-			cvor.inf.isFunkcija = cvor.djeca.get(0).inf.isFunkcija;
+			cvor.initTip(cvor.djeca.get(0).inf);
 			System.out.println(cvor.inf.isFunkcija);
 			System.out.println(cvor.getTip()+" ai "+cvor.djeca.get(0).getTip());
 		}
@@ -362,13 +353,13 @@ public class SemantickiAnalizator {
 			
 			provjeri(cvor.djeca.get(0));
 			
-			if(!implicitnoPretvoriva(cvor.djeca.get(0).getTip(), "int")){
+			if(!implicitnoPretvoriva(cvor.djeca.get(0).inf, "int")){
 				ispisiGresku(cvor);
 			}
 			
 			provjeri(cvor.djeca.get(2));
 			
-			if(!implicitnoPretvoriva(cvor.djeca.get(2).getTip(), "int")){
+			if(!implicitnoPretvoriva(cvor.djeca.get(2).inf, "int")){
 				ispisiGresku(cvor);
 			}
 			
@@ -380,9 +371,7 @@ public class SemantickiAnalizator {
 		if(cvor.trenutacna_produkcija().equals("<odnosni_izraz> ::= <aditivni_izraz>")){
 			provjeri(cvor.djeca.get(0));
 			
-			cvor.setTip(cvor.djeca.get(0).getTip());
-			cvor.inf.l_izraz = cvor.djeca.get(0).inf.l_izraz;
-			cvor.inf.isFunkcija = cvor.djeca.get(0).inf.isFunkcija;
+			cvor.initTip(cvor.djeca.get(0).inf);
 			System.out.println(cvor.inf.isFunkcija);
 			System.out.println(cvor.getTip()+" oi "+cvor.djeca.get(0).getTip());
 		}
@@ -393,13 +382,13 @@ public class SemantickiAnalizator {
 			
 			provjeri(cvor.djeca.get(0));
 			
-			if(!implicitnoPretvoriva(cvor.djeca.get(0).getTip(), "int")){
+			if(!implicitnoPretvoriva(cvor.djeca.get(0).inf, "int")){
 				ispisiGresku(cvor);
 			}
 			
 			provjeri(cvor.djeca.get(2));
 			
-			if(!implicitnoPretvoriva(cvor.djeca.get(2).getTip(), "int")){
+			if(!implicitnoPretvoriva(cvor.djeca.get(2).inf, "int")){
 				ispisiGresku(cvor);
 			}
 			
@@ -410,9 +399,7 @@ public class SemantickiAnalizator {
 		if(cvor.trenutacna_produkcija().equals("<jednakosni_izraz> ::= <odnosni_izraz>")){
 			provjeri(cvor.djeca.get(0));
 			
-			cvor.setTip(cvor.djeca.get(0).getTip());
-			cvor.inf.l_izraz = cvor.djeca.get(0).inf.l_izraz;
-			cvor.inf.isFunkcija = cvor.djeca.get(0).inf.isFunkcija;
+			cvor.initTip(cvor.djeca.get(0).inf);
 			System.out.println(cvor.inf.isFunkcija);
 			System.out.println(cvor.getTip()+" ji "+cvor.djeca.get(0).getTip());
 		}
@@ -423,14 +410,14 @@ public class SemantickiAnalizator {
 			System.out.println("AJEAJJAJE");
 			System.out.println(cvor.djeca.get(0).isFunkcija());
 			
-			if(!implicitnoPretvoriva(cvor.djeca.get(0).getTip(), "int") || cvor.djeca.get(0).isFunkcija()){
+			if(!implicitnoPretvoriva(cvor.djeca.get(0).inf, "int")){
 				ispisiGresku(cvor);
 			}
 			
 			provjeri(cvor.djeca.get(2));
 			
 			System.out.println("TIP2"+cvor.djeca.get(2).getTip());
-			if(!implicitnoPretvoriva(cvor.djeca.get(2).getTip(), "int") || cvor.djeca.get(2).isFunkcija()){
+			if(!implicitnoPretvoriva(cvor.djeca.get(2).inf, "int")){
 				ispisiGresku(cvor);
 			}
 			
@@ -442,22 +429,20 @@ public class SemantickiAnalizator {
 		if(cvor.trenutacna_produkcija().equals("<bin_i_izraz> ::= <jednakosni_izraz>")){
 			provjeri(cvor.djeca.get(0));
 			
-			cvor.setTip(cvor.djeca.get(0).getTip());
-			cvor.inf.l_izraz = cvor.djeca.get(0).inf.l_izraz;
-			cvor.inf.isFunkcija = cvor.djeca.get(0).inf.isFunkcija;
+			cvor.initTip(cvor.djeca.get(0).inf);
 			System.out.println(cvor.getTip()+" bii "+cvor.djeca.get(0).getTip());
 		}
 		//isto isti
 		if(cvor.trenutacna_produkcija().equals("<bin_i_izraz> ::= <bin_i_izraz> OP_BIN_I <jednakosni_izraz>")){
 			provjeri(cvor.djeca.get(0));
 			
-			if(!implicitnoPretvoriva(cvor.djeca.get(0).getTip(), "int")){
+			if(!implicitnoPretvoriva(cvor.djeca.get(0).inf, "int")){
 				ispisiGresku(cvor);
 			}
 			
 			provjeri(cvor.djeca.get(2));
 			
-			if(!implicitnoPretvoriva(cvor.djeca.get(2).getTip(), "int")){
+			if(!implicitnoPretvoriva(cvor.djeca.get(2).inf, "int")){
 				ispisiGresku(cvor);
 			}
 			
@@ -469,22 +454,20 @@ public class SemantickiAnalizator {
 		if(cvor.trenutacna_produkcija().equals("<bin_xili_izraz> ::= <bin_i_izraz>")){
 			provjeri(cvor.djeca.get(0));
 			
-			cvor.setTip(cvor.djeca.get(0).getTip());
-			cvor.inf.l_izraz = cvor.djeca.get(0).inf.l_izraz;
-			cvor.inf.isFunkcija = cvor.djeca.get(0).inf.isFunkcija;
+			cvor.initTip(cvor.djeca.get(0).inf);
 			System.out.println(cvor.getTip()+" bxi "+cvor.djeca.get(0).getTip());
 		}
 		//isto isti
 		if(cvor.trenutacna_produkcija().equals("<bin_xili_izraz> ::= <bin_xili_izraz> OP_BIN_XILI <bin_i_izraz>")){
 			provjeri(cvor.djeca.get(0));
 			
-			if(!implicitnoPretvoriva(cvor.djeca.get(0).getTip(), "int")){
+			if(!implicitnoPretvoriva(cvor.djeca.get(0).inf, "int")){
 				ispisiGresku(cvor);
 			}
 			
 			provjeri(cvor.djeca.get(2));
 			
-			if(!implicitnoPretvoriva(cvor.djeca.get(2).getTip(), "int")){
+			if(!implicitnoPretvoriva(cvor.djeca.get(2).inf, "int")){
 				ispisiGresku(cvor);
 			}
 			
@@ -496,22 +479,20 @@ public class SemantickiAnalizator {
 		if(cvor.trenutacna_produkcija().equals("<bin_ili_izraz> ::= <bin_xili_izraz>")){
 			provjeri(cvor.djeca.get(0));
 			
-			cvor.setTip(cvor.djeca.get(0).getTip());
-			cvor.inf.l_izraz = cvor.djeca.get(0).inf.l_izraz;
-			cvor.inf.isFunkcija = cvor.djeca.get(0).inf.isFunkcija;
+			cvor.initTip(cvor.djeca.get(0).inf);
 			System.out.println(cvor.getTip()+" bili "+cvor.djeca.get(0).getTip());
 		}
 		//svi se ponavljaju wtf
 		if(cvor.trenutacna_produkcija().equals("<bin_ili_izraz> ::= <bin_ili_izraz> OP_BIN_ILI <bin_xili_izraz>")){
 			provjeri(cvor.djeca.get(0));
 			
-			if(!implicitnoPretvoriva(cvor.djeca.get(0).getTip(), "int")){
+			if(!implicitnoPretvoriva(cvor.djeca.get(0).inf, "int")){
 				ispisiGresku(cvor);
 			}
 			
 			provjeri(cvor.djeca.get(2));
 			
-			if(!implicitnoPretvoriva(cvor.djeca.get(2).getTip(), "int")){
+			if(!implicitnoPretvoriva(cvor.djeca.get(2).inf, "int")){
 				ispisiGresku(cvor);
 			}
 			
@@ -523,21 +504,19 @@ public class SemantickiAnalizator {
 		if(cvor.trenutacna_produkcija().equals("<log_i_izraz> ::= <bin_ili_izraz>")){
 			provjeri(cvor.djeca.get(0));
 			
-			cvor.setTip(cvor.djeca.get(0).getTip());
-			cvor.inf.l_izraz = cvor.djeca.get(0).inf.l_izraz;
-			cvor.inf.isFunkcija = cvor.djeca.get(0).inf.isFunkcija;
+			cvor.initTip(cvor.djeca.get(0).inf);
 			System.out.println(cvor.getTip()+" lii "+cvor.djeca.get(0).getTip());
 		}
 		if(cvor.trenutacna_produkcija().equals("<log_i_izraz> ::= <log_i_izraz> OP_I <bin_ili_izraz>")){
 			provjeri(cvor.djeca.get(0));
 			
-			if(!implicitnoPretvoriva(cvor.djeca.get(0).getTip(), "int")){
+			if(!implicitnoPretvoriva(cvor.djeca.get(0).inf, "int")){
 				ispisiGresku(cvor);
 			}
 			
 			provjeri(cvor.djeca.get(2));
 			
-			if(!implicitnoPretvoriva(cvor.djeca.get(2).getTip(), "int")){
+			if(!implicitnoPretvoriva(cvor.djeca.get(2).inf, "int")){
 				ispisiGresku(cvor);
 			}
 			
@@ -548,21 +527,19 @@ public class SemantickiAnalizator {
 		if(cvor.trenutacna_produkcija().equals("<log_ili_izraz> ::= <log_i_izraz>")){
 			provjeri(cvor.djeca.get(0));
 			
-			cvor.setTip(cvor.djeca.get(0).getTip());
-			cvor.inf.l_izraz = cvor.djeca.get(0).inf.l_izraz;
-			cvor.inf.isFunkcija = cvor.djeca.get(0).inf.isFunkcija;
+			cvor.initTip(cvor.djeca.get(0).inf);
 			System.out.println(cvor.getTip()+" lili "+cvor.djeca.get(0).getTip());
 		}
 		if(cvor.trenutacna_produkcija().equals("<log_ili_izraz> ::= <log_ili_izraz> OP_ILI <log_i_izraz>")){
 			provjeri(cvor.djeca.get(0));
 			
-			if(!implicitnoPretvoriva(cvor.djeca.get(0).getTip(), "int")){
+			if(!implicitnoPretvoriva(cvor.djeca.get(0).inf, "int")){
 				ispisiGresku(cvor);
 			}
 			
 			provjeri(cvor.djeca.get(2));
 			
-			if(!implicitnoPretvoriva(cvor.djeca.get(2).getTip(), "int")){
+			if(!implicitnoPretvoriva(cvor.djeca.get(2).inf, "int")){
 				ispisiGresku(cvor);
 			}
 			
@@ -574,9 +551,7 @@ public class SemantickiAnalizator {
 		if(cvor.trenutacna_produkcija().equals("<izraz_pridruzivanja> ::= <log_ili_izraz>")){
 			provjeri(cvor.djeca.get(0));
 			
-			cvor.setTip(cvor.djeca.get(0).getTip());
-			cvor.inf.l_izraz = cvor.djeca.get(0).inf.l_izraz;
-			cvor.inf.isFunkcija = cvor.djeca.get(0).inf.isFunkcija;
+			cvor.initTip(cvor.djeca.get(0).inf);
 			System.out.println(cvor.inf.isFunkcija);
 			System.out.println(cvor.getTip()+" ip "+cvor.djeca.get(0).getTip());
 		}
@@ -590,11 +565,11 @@ public class SemantickiAnalizator {
 			provjeri(cvor.djeca.get(2));
 			//cvor.tip ~~ postfiks_izraz.tip
 			
-			if(!implicitnoPretvoriva(cvor.djeca.get(2).getTip(), postfiks_izraz.getTip())){
+			if(!implicitnoPretvoriva(cvor.djeca.get(2).inf, postfiks_izraz.inf)){
 				ispisiGresku(cvor);
 			}
 			
-			cvor.setTip(postfiks_izraz.getTip());
+			cvor.initTip(postfiks_izraz.inf);
 			cvor.inf.l_izraz = false;//0
 		}
 		
@@ -603,15 +578,13 @@ public class SemantickiAnalizator {
 			//tip i l-izraz
 			provjeri(cvor.djeca.get(0));
 			
-			cvor.setTip(cvor.djeca.get(0).getTip());
-			cvor.inf.l_izraz = cvor.djeca.get(0).inf.l_izraz;
-			cvor.inf.isFunkcija = cvor.djeca.get(0).inf.isFunkcija;
+			cvor.initTip(cvor.djeca.get(0).inf);
 		}
 		if(cvor.trenutacna_produkcija().equals("<izraz> ::= <izraz> ZAREZ <izraz_pridruzivanja>")){
 			provjeri(cvor.djeca.get(0));
 			provjeri(cvor.djeca.get(2));
 			
-			cvor.setTip(cvor.djeca.get(2).getTip());
+			cvor.initTip(cvor.djeca.get(2).inf);
 			cvor.inf.l_izraz = false;
 		}
 		
@@ -656,8 +629,8 @@ public class SemantickiAnalizator {
 		}
 		if(cvor.trenutacna_produkcija().equals("<izraz_naredba> ::= <izraz> TOCKAZAREZ")){
 			provjeri(cvor.djeca.get(0));
-			cvor.setTip(cvor.djeca.get(0).getTip());
-			cvor.inf.isFunkcija = cvor.djeca.get(0).inf.isFunkcija;
+			
+			cvor.initTip(cvor.djeca.get(0).inf);
 			System.out.println(" in ");
 			System.out.println(cvor.inf.isFunkcija);
 		}
@@ -666,7 +639,7 @@ public class SemantickiAnalizator {
 			provjeri(cvor.djeca.get(2));
 			System.out.println(cvor.djeca.get(2).isFunkcija());
 			System.out.println("TU GRESKUUUU");
-			if(!implicitnoPretvoriva(cvor.djeca.get(2).getTip(),"int") || cvor.djeca.get(2).isFunkcija()){//cudno al radi
+			if(!implicitnoPretvoriva(cvor.djeca.get(2).inf,"int")){//cudno al radi
 				ispisiGresku(cvor);
 			}
 			provjeri(cvor.djeca.get(4));
@@ -674,7 +647,7 @@ public class SemantickiAnalizator {
 		}
 		if(cvor.trenutacna_produkcija().equals("<naredba_grananja> ::= KR_IF L_ZAGRADA <izraz> D_ZAGRADA <naredba> KR_ELSE <naredba>")){
 			provjeri(cvor.djeca.get(2));
-			if(!implicitnoPretvoriva(cvor.djeca.get(2).getTip(),"int")){
+			if(!implicitnoPretvoriva(cvor.djeca.get(2).inf,"int")){
 				ispisiGresku(cvor);
 			}
 			provjeri(cvor.djeca.get(4));
@@ -683,7 +656,7 @@ public class SemantickiAnalizator {
 		// ovdje ulaziti i izlaziti iz uPetlji
 		if(cvor.trenutacna_produkcija().equals("<naredba_petlje> ::= KR_WHILE L_ZAGRADA <izraz> D_ZAGRADA <naredba>")){
 			provjeri(cvor.djeca.get(2));
-			if(!implicitnoPretvoriva(cvor.djeca.get(2).getTip(),"int")){
+			if(!implicitnoPretvoriva(cvor.djeca.get(2).inf,"int")){
 				ispisiGresku(cvor);
 			}
 			trenutniDjelokrug.uPetlji=true;System.out.println("UÐE ");//cudno-moguce na drugaciji bolji nacin-tj ovo nevalja-uPetlji treba bit u djelokrugu, ovjde mjenjat vrjednosti, a tamo provjeravat jel istina
@@ -697,7 +670,7 @@ public class SemantickiAnalizator {
 			provjeri(cvor.djeca.get(3));
 			System.out.println("AAAAAAAAAAAAAAASSS");
 			System.out.println(cvor.djeca.get(3).isFunkcija());
-			if(!implicitnoPretvoriva(cvor.djeca.get(3).getTip(),"int") || cvor.djeca.get(3).isFunkcija()){
+			if(!implicitnoPretvoriva(cvor.djeca.get(3).inf,"int")){
 				ispisiGresku(cvor);
 			}
 			trenutniDjelokrug.uPetlji=true;System.out.println("UÐE ");
@@ -709,7 +682,7 @@ public class SemantickiAnalizator {
 		if(cvor.trenutacna_produkcija().equals("<naredba_petlje> ::= KR_FOR L_ZAGRADA <izraz_naredba> <izraz_naredba> <izraz> D_ZAGRADA <naredba>")){
 			provjeri(cvor.djeca.get(2));
 			provjeri(cvor.djeca.get(3));
-			if(!implicitnoPretvoriva(cvor.djeca.get(3).getTip(),"int") || cvor.djeca.get(3).isFunkcija()){
+			if(!implicitnoPretvoriva(cvor.djeca.get(3).inf,"int")){
 				ispisiGresku(cvor);
 			}
 			provjeri(cvor.djeca.get(4));
@@ -748,7 +721,7 @@ public class SemantickiAnalizator {
 			System.out.println(trenutnaFunkcija.tip);
 			System.out.println(izraz.getTip());
 			System.out.println(implicitnoPretvoriva("niz int", "int"));
-			if(trenutnaFunkcija==null || !implicitnoPretvoriva(izraz.getTip(), trenutnaFunkcija.tip)){
+			if(trenutnaFunkcija==null || !implicitnoPretvoriva(izraz.inf, trenutnaFunkcija.tip)){
 				ispisiGresku(cvor);
 			}
 		}
@@ -786,7 +759,7 @@ public class SemantickiAnalizator {
 			if(globalniDjelokrug.sadrziIdn(IDN.ime_iz_koda)){
 				Informacija deklaracija = globalniDjelokrug.getIdentifikator(IDN.ime_iz_koda);
 				
-				if(!deklaracija.tip.equals(ime_tipa.getTip()) || deklaracija.tipovi!=null
+				if(!deklaracija.tip.equals(ime_tipa.inf) || !deklaracija.tipovi.isEmpty()
 						|| deklaracija.isFunkcija!=true){
 					ispisiGresku(cvor);
 				}
@@ -835,7 +808,7 @@ public class SemantickiAnalizator {
 						//morat æu radit hashmapu argumenata(parametara)
 						if(!deklaracija.tipovi.get(i).equals(lista_parametara.inf.tipovi.get(i))){
 							ispisiGresku(cvor);
-						}
+						}//cudno izbazdariti listom
 					}
 				}
 				else{
@@ -869,10 +842,8 @@ public class SemantickiAnalizator {
 			
 			provjeri(deklaracija_parametra);
 			
-			cvor.inf = new Informacija(null);//cudno nema inf
-			cvor.inf.tipovi = new ArrayList<String>();
+			cvor.inf = new Informacija();//cudno nema inf
 			cvor.inf.tipovi.add(deklaracija_parametra.inf.tip);
-			cvor.inf.imena = new ArrayList<String>();
 			cvor.inf.imena.add(deklaracija_parametra.inf.ime);
 		}
 		if(cvor.trenutacna_produkcija().equals("<lista_parametara> ::= <lista_parametara> ZAREZ <deklaracija_parametra>")){
@@ -887,10 +858,10 @@ public class SemantickiAnalizator {
 				ispisiGresku(cvor);
 			}
 			
-			cvor.inf = new Informacija(null);//cudno nema inf
-			cvor.inf.tipovi = new ArrayList<String>(lista_parametara.inf.tipovi);
+			cvor.inf = new Informacija();//cudno nema inf
+			cvor.inf.tipovi.addAll(lista_parametara.inf.tipovi);
 			cvor.inf.tipovi.add(deklaracija_parametra.inf.tip);
-			cvor.inf.imena = new ArrayList<String>(lista_parametara.inf.imena);
+			cvor.inf.imena.addAll(lista_parametara.inf.imena);
 			cvor.inf.imena.add(deklaracija_parametra.inf.ime);
 			
 		}
@@ -986,8 +957,9 @@ public class SemantickiAnalizator {
 			}
 			
 			if(izravni_deklarator.getTip().startsWith("const") || izravni_deklarator.getTip().startsWith(T)){
-				System.out.println(inicijalizator.getTip()+T);
-				if(!implicitnoPretvoriva(inicijalizator.getTip(), T)){
+				System.out.println("BLA:::::"+inicijalizator.getTip()+T);
+				System.out.println(inicijalizator.isFunkcija());//TODO
+				if(!implicitnoPretvoriva(inicijalizator.inf, T)){
 					ispisiGresku(cvor);
 				}
 			}
@@ -1008,7 +980,7 @@ public class SemantickiAnalizator {
 			}
 		}
 		
-		if(cvor.trenutacna_produkcija().equals("<izravni_deklarator> ::= IDN")){
+		if(cvor.trenutacna_produkcija().equals("<izravni_deklarator> ::= IDN")){//TODO
 			Cvor IDN = cvor.djeca.get(0);
 			
 			if(cvor.ntip.equals("void")){
@@ -1019,7 +991,7 @@ public class SemantickiAnalizator {
 				ispisiGresku(cvor);
 			}
 			
-			
+			System.out.println("akdkhawuk="+cvor.ntip);
 			cvor.setTip(cvor.ntip);
 			cvor.inf.isFunkcija=false;
 			trenutniDjelokrug.dodajIdentifikatorUTablicu(cvor.getTip(), IDN.ime_iz_koda);
@@ -1062,7 +1034,7 @@ public class SemantickiAnalizator {
 			
 			if(trenutniDjelokrug.tablica_lokalnih_imena.containsKey(IDN.ime_iz_koda)){
 				Informacija deklaracija = trenutniDjelokrug.tablica_lokalnih_imena.get(IDN.ime_iz_koda);
-				if(deklaracija.isFunkcija!=true || !deklaracija.tip.equals(cvor.ntip) || deklaracija.tipovi!=null){
+				if(deklaracija.isFunkcija!=true || !deklaracija.tip.equals(cvor.ntip) || !deklaracija.tipovi.isEmpty()){
 					ispisiGresku(cvor);
 				}
 				
@@ -1072,9 +1044,12 @@ public class SemantickiAnalizator {
 				trenutniDjelokrug.dodajFunkcijuUTablicu(cvor.ntip, IDN.ime_iz_koda, null);
 			}
 			
-			cvor.setTip(cvor.ntip);//mozda ovak nes za fje napravit
+			
+			
+			cvor.initTip(new Informacija());//mozda ovak nes za fje napravit
+			cvor.inf.tip = cvor.ntip;
 			cvor.inf.isFunkcija = true;
-			cvor.inf.tipovi = null;
+			
 		}
 		
 		if(cvor.trenutacna_produkcija().equals("<izravni_deklarator> ::= IDN L_ZAGRADA <lista_parametara> D_ZAGRADA")){
@@ -1082,7 +1057,7 @@ public class SemantickiAnalizator {
 			Cvor lista_parametara = cvor.djeca.get(2);
 			
 			provjeri(lista_parametara);
-			
+			System.out.println(cvor.ntip+"prode tu"+lista_parametara.getTip());
 			if(trenutniDjelokrug.tablica_lokalnih_imena.containsKey(IDN.ime_iz_koda)){
 				Informacija deklaracija = trenutniDjelokrug.tablica_lokalnih_imena.get(IDN.ime_iz_koda);
 				//cudno-usporediti duljine?
@@ -1101,10 +1076,12 @@ public class SemantickiAnalizator {
 				
 			}
 			else{
+				System.out.println("dodano u lokalnu tablicu"+cvor.ntip+IDN.ime_iz_koda+lista_parametara.inf.tipovi);
 				trenutniDjelokrug.dodajFunkcijuUTablicu(cvor.ntip, IDN.ime_iz_koda, lista_parametara.inf.tipovi);
 			}
-			cvor.setTip(cvor.ntip);
-			cvor.inf.tipovi = new ArrayList<String>(lista_parametara.inf.tipovi);
+			
+			cvor.initTip(new Informacija(cvor.ntip));
+			cvor.inf.tipovi.addAll(lista_parametara.inf.tipovi);
 			cvor.inf.isFunkcija = true;
 			
 		}
@@ -1119,15 +1096,14 @@ public class SemantickiAnalizator {
 			}
 			if(provjera.getImeCvora().equals("NIZ_ZNAKOVA")){
 				System.out.println(provjera.ime_iz_koda.length());
-				cvor.setTip(null);
+				cvor.initTip(new Informacija());
 				cvor.inf.br_elem = provjera.ime_iz_koda.length()-2+1;//zbog navodnika cudno
-				cvor.inf.tipovi = new ArrayList<String>();
 				for(int i=0;i<cvor.inf.br_elem;i++){
 					cvor.inf.tipovi.add("char");					
 				}
 			}
 			else{
-				cvor.setTip(cvor.djeca.get(0).getTip());
+				cvor.initTip(cvor.djeca.get(0).inf);
 			}
 			
 			
@@ -1138,10 +1114,10 @@ public class SemantickiAnalizator {
 			
 			provjeri(lista_izraza_pridruzivanja);
 			
-			cvor.inf = new Informacija(null);//cudno fali tip
+			cvor.initTip(new Informacija());//cudno fali tip
 			System.out.println(lista_izraza_pridruzivanja.inf.br_elem);
 			cvor.inf.br_elem = lista_izraza_pridruzivanja.inf.br_elem;
-			cvor.inf.tipovi = lista_izraza_pridruzivanja.inf.tipovi;
+			cvor.inf.tipovi.addAll(lista_izraza_pridruzivanja.inf.tipovi);
 			
 		}
 		
@@ -1151,9 +1127,8 @@ public class SemantickiAnalizator {
 			
 			provjeri(izraz_pridruzivanja);
 			
-			cvor.inf = new Informacija(null);//cudno fali tip
+			cvor.inf = new Informacija();//cudno fali tip
 			cvor.inf.br_elem = 1;
-			cvor.inf.tipovi = new ArrayList<String>();
 			cvor.inf.tipovi.add(izraz_pridruzivanja.getTip());
 		}
 		if(cvor.trenutacna_produkcija().equals("<lista_izraza_pridruzivanja> ::= <lista_izraza_pridruzivanja> ZAREZ <izraz_pridruzivanja>")){
@@ -1163,9 +1138,9 @@ public class SemantickiAnalizator {
 			provjeri(lista_izraza_pridruzivanja);
 			provjeri(izraz_pridruzivanja);
 			
-			cvor.inf = new Informacija(null);//cudno fali tip
+			cvor.inf = new Informacija();//cudno fali tip
 			cvor.inf.br_elem = lista_izraza_pridruzivanja.inf.br_elem+1;
-			cvor.inf.tipovi = new ArrayList<String>(lista_izraza_pridruzivanja.inf.tipovi);
+			cvor.inf.tipovi.addAll(lista_izraza_pridruzivanja.inf.tipovi);
 			cvor.inf.tipovi.add(izraz_pridruzivanja.getTip());
 		}
 		
@@ -1287,7 +1262,6 @@ public class SemantickiAnalizator {
 		return true;
 	}
 	
-
 	public static boolean implicitnoPretvoriva(String a, String b){
 		if(a.equals(b)){//T~T
 			return true;
@@ -1328,6 +1302,20 @@ public class SemantickiAnalizator {
 		}
 		
 		return false;
+	}
+	
+	public static boolean implicitnoPretvoriva(Informacija ia, String b){
+		if(ia.isFunkcija==true){
+			return false;
+		}
+		return implicitnoPretvoriva(ia.tip, b);
+	}
+	
+	public static boolean implicitnoPretvoriva(Informacija ia, Informacija ib){
+		if(ia.isFunkcija==true || ib.isFunkcija==true){
+			return false;
+		}		
+		return implicitnoPretvoriva(ia.tip, ib.tip);
 	}
 	
 	public static boolean isInteger(String string){
