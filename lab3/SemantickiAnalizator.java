@@ -23,8 +23,8 @@ public class SemantickiAnalizator {
 		trenutnaFunkcija = null;
 		
 		
-		//BufferedReader bf = new BufferedReader(new InputStreamReader(System.in));
-		BufferedReader bf = new BufferedReader(new FileReader("tp/03b70a1caba049785b7c55ed8494a101.in"));
+		BufferedReader bf = new BufferedReader(new InputStreamReader(System.in));
+		//BufferedReader bf = new BufferedReader(new FileReader("tp/41ea37066c9e807097fc6ce0f42f57d3.in"));
 		Cvor glavni = Cvor.stvori_stablo_iz_filea(bf);
 		
 		
@@ -56,8 +56,6 @@ public class SemantickiAnalizator {
 				
 				cvor.initTip(trenutniDjelokrug.getIdentifikator(IDN.ime_iz_koda));
 				
-				
-				
 			}
 			else{
 				ispisiGresku(cvor);
@@ -65,7 +63,7 @@ public class SemantickiAnalizator {
 		}
 		if(cvor.trenutacna_produkcija().equals("<primarni_izraz> ::= BROJ")){
 			
-			if(!isInteger(cvor.djeca.get(0).ime_iz_koda)){
+			if(!isInteger(cvor.djeca.get(0).ime_iz_koda, cvor.ntip)){//za OP_NEG
 				
 				ispisiGresku(cvor);
 			}
@@ -101,6 +99,7 @@ public class SemantickiAnalizator {
 		}
 		
 		if(cvor.trenutacna_produkcija().equals("<postfiks_izraz> ::= <primarni_izraz>")){
+			cvor.djeca.get(0).ntip = cvor.ntip;//za OP_NEG
 			
 			provjeri(cvor.djeca.get(0));
 			
@@ -134,8 +133,8 @@ public class SemantickiAnalizator {
 			else{
 				ispisiGresku(cvor);
 			}*/
-			
-			cvor.inf.l_izraz=!postfiks_izraz.getTip().startsWith("const");
+
+			cvor.inf.l_izraz=!X.startsWith("const");
 		}		
 		if(cvor.trenutacna_produkcija().equals("<postfiks_izraz> ::= <postfiks_izraz> L_ZAGRADA D_ZAGRADA")){
 			Cvor postfiks_izraz = cvor.djeca.get(0);
@@ -162,21 +161,18 @@ public class SemantickiAnalizator {
 			provjeri(lista_argumenata);
 			//cudno, jel fja smije bit void?
 			
-			
 			if(!postfiks_izraz.inf.tipovi.isEmpty() && postfiks_izraz.inf.isFunkcija == true && lista_argumenata.inf.tipovi.size()==postfiks_izraz.inf.tipovi.size()){//cudno-postfix.tip=fja(params->pov)
 				ArrayList<String> arg_tipovi= lista_argumenata.inf.tipovi;//jel tipovi il parametri?
 				ArrayList<String> param_tipovi= postfiks_izraz.inf.tipovi;
-				
 				for(int i=0;i<arg_tipovi.size();i++){
 					
-					
 					if(!implicitnoPretvoriva(arg_tipovi.get(i), param_tipovi.get(i))){
-						
 						ispisiGresku(cvor);
 					}
 				}
 			}
 			else{
+				
 				ispisiGresku(cvor);
 			}
 			
@@ -219,6 +215,8 @@ public class SemantickiAnalizator {
 		}
 		
 		if(cvor.trenutacna_produkcija().equals("<unarni_izraz> ::= <postfiks_izraz>")){
+			cvor.djeca.get(0).ntip = cvor.ntip;//za OP_NEG
+			
 			provjeri(cvor.djeca.get(0));
 
 			cvor.initTip(cvor.djeca.get(0).inf);
@@ -242,6 +240,8 @@ public class SemantickiAnalizator {
 		}
 		
 		if(cvor.trenutacna_produkcija().equals("<unarni_izraz> ::= <unarni_operator> <cast_izraz>")){//za <unarni_operator> nist
+			provjeri(cvor.djeca.get(0));
+			cvor.djeca.get(1).ntip = cvor.djeca.get(0).ntip;//ZA OP_NEG
 			provjeri(cvor.djeca.get(1));
 			if(!implicitnoPretvoriva(cvor.djeca.get(1).inf, "int")){
 				ispisiGresku(cvor);
@@ -256,9 +256,16 @@ public class SemantickiAnalizator {
 				cvor.trenutacna_produkcija().equals("<unarni_operator> ::= OP_TILDA") ||
 				cvor.trenutacna_produkcija().equals("<unarni_operator> ::= OP_NEG")){
 			//nista ne treba
+			if(cvor.djeca.get(0).getImeCvora().equals("MINUS")){
+				cvor.ntip = "-"; //posluzitzu se neiskoriztenim svojstvom
+			}
+			
 		}
 		
+		
 		if(cvor.trenutacna_produkcija().equals("<cast_izraz> ::= <unarni_izraz>")){
+			cvor.djeca.get(0).ntip = cvor.ntip;//za OP_NEG
+			
 			provjeri(cvor.djeca.get(0));
 			
 			cvor.initTip(cvor.djeca.get(0).inf);
@@ -952,18 +959,23 @@ public class SemantickiAnalizator {
 				ispisiGresku(cvor);
 			}
 			
-			if(izravni_deklarator.getTip().startsWith("const") || izravni_deklarator.getTip().startsWith(T)){
+			if((izravni_deklarator.getTip().equals("const "+T) || izravni_deklarator.getTip().equals(T)) && inicijalizator.inf.tipovi.isEmpty()){//cudno mozda napravi vize grezaka
 				
 				if(!implicitnoPretvoriva(inicijalizator.inf, T)){
 					ispisiGresku(cvor);
 				}
 			}
-			else if(izravni_deklarator.getTip().startsWith("niz")){
+			else if(izravni_deklarator.getTip().equals("niz "+T) || izravni_deklarator.getTip().equals("niz const "+T)){
 				if(inicijalizator.inf.br_elem <= izravni_deklarator.inf.br_elem){
-					for(String U:inicijalizator.inf.tipovi){
-						if(!implicitnoPretvoriva(U, T)){
-							ispisiGresku(cvor);
+					if(!inicijalizator.inf.tipovi.isEmpty())
+						for(String U:inicijalizator.inf.tipovi){
+							if(!implicitnoPretvoriva(U, T)){
+								
+								ispisiGresku(cvor);
+							}
 						}
+					else{
+						ispisiGresku(cvor);	
 					}
 				}
 				else{
@@ -1008,12 +1020,20 @@ public class SemantickiAnalizator {
 			}
 			int broj = 0;
 			try{
-		        broj = Integer.parseInt(BROJ.ime_iz_koda);
+				if(BROJ.ime_iz_koda.startsWith("0x")){//cudno ne spominju se druge baze
+					broj = Integer.parseInt(BROJ.ime_iz_koda.substring(2),16);
+				}
+				else if(BROJ.ime_iz_koda.startsWith("0") && BROJ.ime_iz_koda.length()>1){
+					broj = Integer.parseInt(BROJ.ime_iz_koda.substring(1),8);
+				}
+				else{
+					broj = Integer.parseInt(BROJ.ime_iz_koda);
+				}
 		    } 
 			catch(NumberFormatException e){ 
 		    	ispisiGresku(cvor);
 		    }
-			if(broj<0 || broj>1024){
+			if(broj<=0 || broj>1024){
 				ispisiGresku(cvor);
 			}
 			
@@ -1094,7 +1114,7 @@ public class SemantickiAnalizator {
 			if(provjera.getImeCvora().equals("NIZ_ZNAKOVA")){
 				
 				cvor.initTip(cvor.djeca.get(0).inf);
-				cvor.inf.br_elem = provjera.ime_iz_koda.length()-2+1;//zbog navodnika cudno
+				cvor.inf.br_elem = duljinaNizaZnakova(provjera.ime_iz_koda)-2+1;// TODO zbog navodnika cudno
 				for(int i=0;i<cvor.inf.br_elem;i++){
 					cvor.inf.tipovi.add("char");				
 				}
@@ -1102,10 +1122,9 @@ public class SemantickiAnalizator {
 			else{
 				cvor.initTip(cvor.djeca.get(0).inf);
 			}
-			
-			
-			
 		}
+		
+		
 		if(cvor.trenutacna_produkcija().equals("<inicijalizator> ::= L_VIT_ZAGRADA <lista_izraza_pridruzivanja> D_VIT_ZAGRADA")){
 			Cvor lista_izraza_pridruzivanja = cvor.djeca.get(1);
 			
@@ -1168,6 +1187,7 @@ public class SemantickiAnalizator {
 		
 		return false;
 	}
+	
 
 	private static void provjeraNakonObilaska() {
 		if(!definiraneFunkcije.containsKey("main")){
@@ -1225,12 +1245,26 @@ public class SemantickiAnalizator {
 		}
 	}
 
+	private static int duljinaNizaZnakova(String a){
+		String s = new String(a);
+		s = s.replaceAll("\\\\\\\\", "a");
+		s = s.replaceAll("\\\\t", "a");
+		s = s.replaceAll("\\\\n", "a");
+		s = s.replaceAll("\\\\0", "a");
+		s = s.replaceAll("\\\\'", "a");
+		s = s.replaceAll("\\\\\"", "a");
+		return s.length();
+	}
+
+	
 	private static boolean nizZnakovaIspravan(String s) {
+		
 		if(s.length()>3){
-			for (int i = 1; i < s.length()-2; i++){//bez navodnika
+			for (int i = 1; i < s.length()-1; i++){//bez navodnika
 				char prvi = s.charAt(i);
-				char drugi = s.charAt(i+1);
-			    
+				char drugi = s.charAt(i+1); // "\\""
+				if(i==s.length()-2)
+					drugi = '$';
 			    if(prvi == '\\' && (
 		    		drugi != 't' && 
 					drugi != 'n' && 
@@ -1239,9 +1273,18 @@ public class SemantickiAnalizator {
 					drugi != '\"' && 
 					drugi != '\\' )){
 			    	return false;
-			    }
+			    } 
+			    else if(prvi == '\\' && (
+			    		drugi == 't' || 
+						drugi == 'n' || 
+						drugi == '0' || 
+						drugi == '\'' || 
+						drugi == '\"' || 
+						drugi == '\\' )){
+				    	i++;
+				}
 			    
-			    if(prvi != '\\' && drugi == '\"'){
+			    if(prvi != '\\' && drugi == '\"' || prvi == '\"'){
 			    	return false;
 			    }
 			    
@@ -1308,17 +1351,21 @@ public class SemantickiAnalizator {
 		return implicitnoPretvoriva(ia.tip, ib.tip);
 	}
 	
-	public static boolean isInteger(String string){
+	public static boolean isInteger(String string, String predznak){
+		if(predznak==null){
+			predznak="";
+		}
+		
 		
 		try {
 			if(string.startsWith("0x")){//cudno ne spominju se druge baze
-				Integer.parseInt(string.substring(2),16);
+				Integer.parseInt(predznak+string.substring(2),16);
 			}
 			else if(string.startsWith("0") && string.length()>1){
-				Integer.parseInt(string.substring(1),8);
+				Integer.parseInt(predznak+string.substring(1),8);
 			}
 			else{
-	        Integer.parseInt(string);
+				Integer.parseInt(predznak+string);
 			}
 	    } catch(NumberFormatException e) { 
 	        return false;

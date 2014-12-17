@@ -65,6 +65,9 @@ public class Informacija {
 
 	public Informacija(String tip, int br_elem) {
 		this.tip = tip;
+		if(tip.contains("const")){
+			this.l_izraz = false;//nema utjecaj
+		}
 		this.isFunkcija = false;
 		this.br_elem = br_elem;
 	}
