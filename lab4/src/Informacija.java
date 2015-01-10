@@ -4,8 +4,10 @@ import java.util.HashMap;
 
 public class Informacija {
 	public String vrijednost;
-	public String tip;
 	public String ime;
+	
+	
+	public String tip;
 	public boolean isFunkcija;
 	public boolean isDefinirana;
 	//public HashMap<String,String> parametri;//parametri-Map<String, String>
@@ -13,6 +15,7 @@ public class Informacija {
 	
 	public ArrayList<String> tipovi;
 	public ArrayList<String> imena;
+	public ArrayList<String> vrijednosti;
 	
 	public int br_elem;//za niz
 	
@@ -20,6 +23,7 @@ public class Informacija {
 		this.tip = null;
 		this.tipovi = new ArrayList<String>();
 		this.imena = new ArrayList<String>();
+		this.vrijednosti = new ArrayList<String>();
 	}
 	
 		
@@ -76,6 +80,8 @@ public class Informacija {
 		this.tip = informacija.tip;
 		this.l_izraz = informacija.l_izraz;
 		this.isFunkcija = informacija.isFunkcija;
+		this.vrijednost = informacija.vrijednost;
+		this.ime = informacija.ime;
 		
 		if(informacija.tipovi!=null)
 			this.tipovi = new ArrayList<String>(informacija.tipovi);
@@ -88,7 +94,4 @@ public class Informacija {
 			this.imena = new ArrayList<String>();
 	}
 
-	public void setVrijednost(String vrijednost){
-		this.vrijednost = vrijednost;
-	}
 }

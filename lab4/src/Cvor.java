@@ -27,22 +27,22 @@ public class Cvor {
 	}
 	//posalji informaicju
 	
-	public Informacija initTip(Informacija informacija){
+	/*public Informacija initTip(Informacija informacija){
 		this.inf = new Informacija(informacija);
 		return this.inf;
-	}
+	}*/
 	
 	
 	public String getTip(){
 		return inf.tip;
 	}
 	
-	public void setTip(String tip){
+	/*public void setTip(String tip){
 		if(inf==null){
 			inf = new Informacija(tip);
 		}
 		inf.tip = tip;
-	}
+	}*/
 	
 	public boolean isFunkcija(){
 		return inf.isFunkcija;

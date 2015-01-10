@@ -13,6 +13,8 @@ public class Djelokrug {
 	public boolean uPetlji;
 	
 	public HashMap<String, Informacija> tablica_lokalnih_imena;
+	public HashMap<String, Integer> lokacije_lokalnih_imena;
+	static int stog;
 	
 	public static ArrayList<String> deklFjeImena;
 	public static ArrayList<String> deklFjeTipovi;
@@ -21,11 +23,13 @@ public class Djelokrug {
 		deklFjeImena = new ArrayList<String>();
 		deklFjeTipovi = new ArrayList<String>();
 		deklFjeTipoviPar = new ArrayList<ArrayList<String>>();
+		stog = 0x40000;
 	}
 	
 	
 	public Djelokrug(Djelokrug roditeljDjelokrug){
 		this.tablica_lokalnih_imena = new HashMap<String, Informacija>();
+		this.lokacije_lokalnih_imena = new HashMap<String, Integer>();
 		this.roditeljDjelokrug = roditeljDjelokrug;
 		this.djecaDjelokrug = new ArrayList<Djelokrug>();
 		this.uPetlji = false;
@@ -59,6 +63,9 @@ public class Djelokrug {
 		
 		tablica_lokalnih_imena.put(naziv, novaInf);
 		
+		stog-=1;
+		lokacije_lokalnih_imena.put(naziv, stog);
+		System.out.println("Dodan "+naziv+Integer.toHexString(stog));
 	}
 	
 	public void dodajNizUTablicu(String tip, String naziv, int br_elem){
@@ -97,6 +104,20 @@ public class Djelokrug {
 		else{
 			if(roditeljDjelokrug!=null){
 				return roditeljDjelokrug.getIdentifikator(ime);
+			}
+			else{
+				return null;
+			}
+		}
+	}
+	
+	public String getLokaciju(String ime){
+		if(lokacije_lokalnih_imena.containsKey(ime)){
+			return Integer.toHexString(lokacije_lokalnih_imena.get(ime));
+		}
+		else{
+			if(roditeljDjelokrug!=null){
+				return roditeljDjelokrug.getLokaciju(ime);
 			}
 			else{
 				return null;
