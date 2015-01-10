@@ -14,6 +14,8 @@ public class Djelokrug {
 	
 	public HashMap<String, Informacija> tablica_lokalnih_imena;
 	public HashMap<String, Integer> lokacije_lokalnih_imena;
+	public ArrayList<String> globalna_imena;
+	
 	static int stog;
 	
 	public static ArrayList<String> deklFjeImena;
@@ -34,9 +36,12 @@ public class Djelokrug {
 		this.djecaDjelokrug = new ArrayList<Djelokrug>();
 		this.uPetlji = false;
 		
+		globalna_imena = new ArrayList<String>();
+		
 		if(roditeljDjelokrug!=null){//ako nije korijen
 			roditeljDjelokrug.djecaDjelokrug.add(this);
 		}
+		
 	}
 	
 	public boolean uPetlji(){
@@ -63,9 +68,15 @@ public class Djelokrug {
 		
 		tablica_lokalnih_imena.put(naziv, novaInf);
 		
-		stog-=1;
-		lokacije_lokalnih_imena.put(naziv, stog);
-		System.out.println("Dodan "+naziv+Integer.toHexString(stog));
+		if(roditeljDjelokrug!=null){
+			stog-=1;
+			lokacije_lokalnih_imena.put(naziv, stog);
+			System.out.println("Dodan "+naziv+Integer.toHexString(stog));
+		}
+		else{
+			globalna_imena.add(naziv);
+		}
+		
 	}
 	
 	public void dodajNizUTablicu(String tip, String naziv, int br_elem){
@@ -93,6 +104,20 @@ public class Djelokrug {
 			}
 			else{
 				return false;
+			}
+		}
+	}
+	
+	public boolean samoUGlobalnom(String ime){
+		if(roditeljDjelokrug==null){
+			return globalna_imena.contains(ime);
+		}
+		else{
+			if(tablica_lokalnih_imena.containsKey(ime)){
+				return false;
+			}
+			else{
+				return roditeljDjelokrug.samoUGlobalnom(ime);
 			}
 		}
 	}

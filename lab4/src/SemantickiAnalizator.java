@@ -16,6 +16,8 @@ public class SemantickiAnalizator {
 	static int unutarPetlji;
 	static MnemProgram program;
 	
+	static HashMap<String, String> globalneVarijable;
+	
 	public static void main(String[] args) throws IOException {
 		definiraneFunkcije = new HashMap<String, Informacija>();
 		trenutnaFunkcija = null;
@@ -26,6 +28,7 @@ public class SemantickiAnalizator {
 		BufferedReader bf = new BufferedReader(new FileReader("npr/02_ret_global/test.in"));
 		Cvor glavni = Cvor.stvori_stablo_iz_filea(bf);
 		
+		globalneVarijable = new HashMap<String, String>();
 		
 		globalniDjelokrug = new Djelokrug(null);
 		trenutniDjelokrug = globalniDjelokrug;
@@ -540,6 +543,9 @@ public class SemantickiAnalizator {
 				ispisiGresku(cvor);
 			}
 			
+			String lokacija = trenutniDjelokrug.getLokaciju(postfiks_izraz.inf.ime);//TODO ne odmah dodat linije nego utvrditi koji podatak ide u var
+			program.dodajLiniju("MOVE %D "+cvor.djeca.get(2).inf.vrijednost+", "+postfiks_izraz.inf.ime);
+			
 			cvor.inf = postfiks_izraz.inf;
 			cvor.inf.l_izraz = false;//0
 		}
@@ -688,7 +694,13 @@ public class SemantickiAnalizator {
 			if(trenutnaFunkcija==null || !implicitnoPretvoriva(izraz.inf, trenutnaFunkcija.tip)){
 				ispisiGresku(cvor);
 			}
-			program.dodajLiniju("LOAD R0, ("+trenutniDjelokrug.getLokaciju(izraz.inf.ime)+")");
+			
+			if(!trenutniDjelokrug.samoUGlobalnom(izraz.inf.ime)){//TODO funkcija za ispitivanje pripadnosti globalnom djelokrugu, u djelokrugu
+				program.dodajLiniju("LOAD R0, ("+trenutniDjelokrug.getLokaciju(izraz.inf.ime)+")");
+			}
+			else{
+				program.dodajLiniju("LOAD R0, (G_"+izraz.inf.ime+")");
+			}
 			program.dodajLiniju("MOVE R0, R6");
 			//skoèi do returna iz fje
 			program.dodajLiniju("RET");
@@ -740,6 +752,7 @@ public class SemantickiAnalizator {
 					ispisiGresku(cvor);
 				}
 			}
+			
 			
 			//zabilježi definiciju i deklaraciju fje
 			definiraneFunkcije.put(IDN.ime_iz_koda, new Informacija(ime_tipa.getTip(), null, null));
@@ -930,7 +943,19 @@ public class SemantickiAnalizator {
 			cvor.inf.ime = izravni_deklarator.inf.ime;
 			cvor.inf.vrijednost = inicijalizator.inf.vrijednost;
 			
-			System.out.println(izravni_deklarator.inf.ime+"="+inicijalizator.inf.vrijednost);
+			
+			String lokacija;
+			if(trenutniDjelokrug.roditeljDjelokrug!=null){
+				lokacija = trenutniDjelokrug.getLokaciju(izravni_deklarator.inf.ime);//TODO ne odmah dodat linije nego utvrditi koji podatak ide u var
+				program.dodajLiniju("LOAD R0, ("+lokacija+")");
+			}
+			else{
+				globalneVarijable.put(izravni_deklarator.inf.ime, inicijalizator.inf.vrijednost);
+				lokacija = "G_"+izravni_deklarator.inf.ime;
+				program.dodajNaKraj("G_"+izravni_deklarator.inf.ime+" DW %D "+inicijalizator.inf.vrijednost);
+			}
+			
+			
 			
 			String T = null;
 			if(izravni_deklarator.getTip().contains("int")){//int, const int, niz const int
@@ -987,7 +1012,9 @@ public class SemantickiAnalizator {
 			cvor.inf = new Informacija(cvor.ntip);
 			cvor.inf.ime = IDN.ime_iz_koda;
 			cvor.inf.isFunkcija=false;
-			trenutniDjelokrug.dodajIdentifikatorUTablicu(cvor.getTip(), IDN.ime_iz_koda);
+			
+			trenutniDjelokrug.dodajIdentifikatorUTablicu(cvor.getTip(), IDN.ime_iz_koda);//TODO
+			
 			
 		}
 		
