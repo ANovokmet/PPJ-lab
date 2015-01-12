@@ -11,9 +11,9 @@ public class MnemProgram {
 		linije = new ArrayList<String>();
 		kraj = new ArrayList<String>();
 		tablica_labeli = new HashMap<String,Integer>();
-		linije.add("MOVE 40000, R7");
-		linije.add("CALL F_main");
-		linije.add("HALT");
+		linije.add(" MOVE 40000, R7");
+		linije.add(" CALL F_main");
+		linije.add(" HALT");
 	}
 	
 		

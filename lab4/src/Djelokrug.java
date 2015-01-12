@@ -69,7 +69,7 @@ public class Djelokrug {
 		tablica_lokalnih_imena.put(naziv, novaInf);
 		
 		if(roditeljDjelokrug!=null){
-			stog-=1;
+			stog-=4;
 			lokacije_lokalnih_imena.put(naziv, stog);
 			System.out.println("Dodan "+naziv+Integer.toHexString(stog));
 		}
@@ -133,6 +133,15 @@ public class Djelokrug {
 			else{
 				return null;
 			}
+		}
+	}
+	
+	public String lokacija(String ime){
+		if(samoUGlobalnom(ime)){
+			return "G_"+ime;
+		}
+		else{
+			return getLokaciju(ime);
 		}
 	}
 	
