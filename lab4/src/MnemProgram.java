@@ -73,4 +73,13 @@ public class MnemProgram {
 			}
 		}
 	}
+	
+	public void dodajPredLiniju(String string, String linija) {
+		for(int i=linije.size()-1;i>=0;i--){
+			if(linije.get(i).equals(linija)){
+				linije.add(i, string);
+				break;
+			}
+		}
+	}
 }

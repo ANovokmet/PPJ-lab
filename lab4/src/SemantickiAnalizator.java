@@ -13,6 +13,7 @@ public class SemantickiAnalizator {
 	static Djelokrug trenutniDjelokrug;
 	
 	static int idDjelokrug;
+	static int idUsporedba;
 	
 	static HashMap<String, Informacija> definiraneFunkcije;
 	static Informacija trenutnaFunkcija;
@@ -23,15 +24,17 @@ public class SemantickiAnalizator {
 	
 	static boolean u_listi_parametara = false;
 	
+	
 	public static void main(String[] args) throws IOException {
 		definiraneFunkcije = new HashMap<String, Informacija>();
 		trenutnaFunkcija = null;
 		idDjelokrug = 0;
+		idUsporedba = 0;
 		
 		program = new MnemProgram();
 		
 		//BufferedReader bf = new BufferedReader(new InputStreamReader(System.in));
-		BufferedReader bf = new BufferedReader(new FileReader("npr/18_init_izraz/test.in"));
+		BufferedReader bf = new BufferedReader(new FileReader("npr/23_niz1/test.in"));
 		Cvor glavni = Cvor.stvori_stablo_iz_filea(bf);
 		
 		globalneVarijable = new HashMap<String, String>();
@@ -57,7 +60,7 @@ public class SemantickiAnalizator {
 				cvor.inf = new Informacija(trenutniDjelokrug.getIdentifikator(IDN.ime_iz_koda));
 				cvor.inf.ime = IDN.ime_iz_koda;
 				
-				if(cvor.inf.isFunkcija!=true){
+				if(cvor.inf.isFunkcija!=true && !cvor.inf.tip.startsWith("niz")){
 					String lokacija = trenutniDjelokrug.lokacija(cvor.inf.ime);
 					if(trenutniDjelokrug.samoUGlobalnom(cvor.inf.ime)){
 						program.dodajLiniju(" LOAD R0, ("+lokacija+")");
@@ -68,9 +71,6 @@ public class SemantickiAnalizator {
 						program.dodajLiniju(" LOAD R0, ("+lokacija+")");
 						program.dodajLiniju(" PUSH R0");
 					}
-					
-					
-					
 				}
 			}
 			else{
@@ -97,12 +97,14 @@ public class SemantickiAnalizator {
 				if(broj<=0x7ffff){
 					program.dodajLiniju(" MOVE %D "+cvor.inf.vrijednost+", R0");
 					program.dodajLiniju(" PUSH R0");
+					Djelokrug.relodmak+=4;
 				}
 				else{
 					//TODO nazivi konstanti
 					program.dodajNaKraj("K_a DW %D "+cvor.inf.vrijednost);
 					program.dodajLiniju(" LOAD R0, ("+"K_a"+")");
 					program.dodajLiniju(" PUSH R0");
+					Djelokrug.relodmak+=4;
 				}
 				
 			}
@@ -160,9 +162,39 @@ public class SemantickiAnalizator {
 			}
 			String X = postfiks_izraz.getTip().substring(4);
 			
+
 			cvor.inf = new Informacija(X);
+			cvor.inf.ime = postfiks_izraz.inf.ime;
 			cvor.inf.l_izraz=!X.startsWith("const");
 			//TODO NIZ
+			
+			String lokacija = trenutniDjelokrug.lokacija(postfiks_izraz.inf.ime);
+			if(trenutniDjelokrug.samoUGlobalnom(postfiks_izraz.inf.ime)){
+				program.dodajLiniju(" POP R0");
+				program.dodajLiniju(" MOVE R0, R1");
+				program.dodajLiniju(" ADD R0, R1, R1");
+				program.dodajLiniju(" ADD R0, R1, R1");
+				program.dodajLiniju(" ADD R0, R1, R1");
+				program.dodajLiniju(" MOVE "+lokacija+", R0");
+				program.dodajLiniju(" ADD R0, R1, R0");
+				program.dodajLiniju(" PUSH R0");//R0 = adresa niz[BROJ)
+				Djelokrug.relodmak+=4;
+			}
+			else{
+				int offset = trenutniDjelokrug.getOffset(postfiks_izraz.inf.ime);
+				program.dodajLiniju(" POP R0");//TODO ne valja
+				program.dodajLiniju(" ADD R0, R1, R1");
+				program.dodajLiniju(" ADD R0, R1, R1");
+				program.dodajLiniju(" ADD R0, R1, R1");
+				program.dodajLiniju(" ADD R0, R1, R1");
+				program.dodajLiniju(" ADD R7, R0");
+				program.dodajLiniju(" MOVE %D "+offset+", R1");
+				program.dodajLiniju(" ADD R1, R0, R0");
+				program.dodajLiniju(" LOAD R0, (R0)");
+				program.dodajLiniju(" PUSH R0");
+			}
+			
+
 			
 		}		
 		if(cvor.trenutacna_produkcija().equals("<postfiks_izraz> ::= <postfiks_izraz> L_ZAGRADA D_ZAGRADA")){
@@ -434,6 +466,27 @@ public class SemantickiAnalizator {
 			
 			provjeri(cvor.djeca.get(2));
 			
+			program.dodajLiniju(" POP R1");
+			program.dodajLiniju(" POP R0");
+			program.dodajLiniju(" CMP R0, R1");
+			program.dodajLiniju(" MOVE %D 1, R0");
+			String znak = cvor.djeca.get(1).ime_iz_koda;
+			if(znak.equals("<")){
+				program.dodajLiniju(" JP_SLT TRUE_"+(++idUsporedba));
+			}
+			else if(znak.equals(">")){
+				program.dodajLiniju(" JP_SGT TRUE_"+(++idUsporedba));
+			}
+			else if(znak.equals("<=")){
+				program.dodajLiniju(" JP_SLE TRUE_"+(++idUsporedba));
+			}
+			else if(znak.equals(">=")){
+				program.dodajLiniju(" JP_SGE TRUE_"+(++idUsporedba));
+			}
+			program.dodajLiniju(" MOVE %D 0, R0");
+			program.dodajLiniju("TRUE_"+idUsporedba);
+			program.dodajLiniju(" PUSH R0");
+			
 			if(!implicitnoPretvoriva(cvor.djeca.get(2).inf, "int")){
 				ispisiGresku(cvor);
 			}
@@ -607,6 +660,13 @@ public class SemantickiAnalizator {
 			provjeri(cvor.djeca.get(0));
 			
 			cvor.inf = cvor.djeca.get(0).inf;
+			
+			Informacija a = trenutniDjelokrug.getIdentifikator(cvor.inf.ime);
+			if(a!=null && a.tip.startsWith("niz")){
+				program.dodajLiniju(" POP R0");
+				program.dodajLiniju(" LOAD R0, (R0)");
+				program.dodajLiniju(" PUSH R0");
+			}
 		}
 		if(cvor.trenutacna_produkcija().equals("<izraz_pridruzivanja> ::= <postfiks_izraz> OP_PRIDRUZI <izraz_pridruzivanja>")){
 			Cvor postfiks_izraz = cvor.djeca.get(0);
@@ -622,11 +682,23 @@ public class SemantickiAnalizator {
 				ispisiGresku(cvor);
 			}
 			
-			String lokacija = trenutniDjelokrug.getLokaciju(postfiks_izraz.inf.ime);//TODO ne odmah dodat linije nego utvrditi koji podatak ide u var
-			program.dodajLiniju(" MOVE %D "+cvor.djeca.get(2).inf.vrijednost+", "+postfiks_izraz.inf.ime);
+			
+			Informacija a = trenutniDjelokrug.getIdentifikator(postfiks_izraz.inf.ime);
+			if(a.tip.startsWith("niz")){
+				program.dodajLiniju(" POP R0");
+				program.dodajLiniju(" POP R1");
+				program.dodajLiniju(" STORE R0, (R1)");
+			}
+			else{
+				String lokacija = trenutniDjelokrug.getLokaciju(postfiks_izraz.inf.ime);//TODO nevalja
+				program.dodajLiniju(" MOVE %D "+cvor.djeca.get(2).inf.vrijednost+", "+postfiks_izraz.inf.ime);
+			}
+			
 			
 			cvor.inf = postfiks_izraz.inf;
 			cvor.inf.l_izraz = false;//0
+			cvor.inf.vrijednost = cvor.djeca.get(2).inf.vrijednost;
+			cvor.inf.vrijednosti = cvor.djeca.get(2).inf.vrijednosti;
 		}
 		
 		
@@ -661,11 +733,11 @@ public class SemantickiAnalizator {
 			/*for(int i=0; i<lista_deklaracija.inf.imena.size();i++){
 				trenutniDjelokrug.lokacije_lokalnih_imena.put(lista_deklaracija.inf.imena.get(i), "R7+"+i*4);
 			}*/
-			program.dodajNaPocDje(" SUB R7, "+lista_deklaracija.inf.imena.size()*4+", R7", idDjelokrug);
+			program.dodajNaPocDje(" SUB R7, %D "+lista_deklaracija.inf.imena.size()*4+", R7", idDjelokrug);
 			
 			provjeri(cvor.djeca.get(2));
 			
-			program.dodajPredRet(" ADD R7, "+lista_deklaracija.inf.imena.size()*4+", R7");
+			program.dodajPredRet(" ADD R7, %D "+lista_deklaracija.inf.imena.size()*4+", R7");
 			
 		}
 		
@@ -684,7 +756,6 @@ public class SemantickiAnalizator {
 			
 			int id = ++idDjelokrug;
 			program.dodajLiniju("U_D_"+id);
-			
 			provjeri(cvor.djeca.get(0));
 			
 			program.dodajLiniju("IZ_D_"+id);
@@ -708,8 +779,12 @@ public class SemantickiAnalizator {
 		}
 		
 		if(cvor.trenutacna_produkcija().equals("<naredba_grananja> ::= KR_IF L_ZAGRADA <izraz> D_ZAGRADA <naredba>")){
+			
 			provjeri(cvor.djeca.get(2));
 			
+			program.dodajLiniju(" POP R0");//if naredba
+			program.dodajLiniju(" SUB R0, 0, R0");
+			program.dodajLiniju(" JP_Z IZ_D_"+(idDjelokrug+1));
 			
 			if(!implicitnoPretvoriva(cvor.djeca.get(2).inf,"int")){//cudno al radi
 				ispisiGresku(cvor);
@@ -722,7 +797,16 @@ public class SemantickiAnalizator {
 			if(!implicitnoPretvoriva(cvor.djeca.get(2).inf,"int")){
 				ispisiGresku(cvor);
 			}
+			program.dodajLiniju(" POP R0");//if naredba
+			program.dodajLiniju(" SUB R0, 0, R0");
+			
+			String idDjel = "IZ_D_"+(idDjelokrug+1);
+			program.dodajLiniju(" JP_Z "+idDjel);
+			
 			provjeri(cvor.djeca.get(4));
+			
+			program.dodajPredLiniju(" JP IZ_D_"+(idDjelokrug+1), idDjel);
+			
 			provjeri(cvor.djeca.get(6));
 		}
 		// ovdje ulaziti i izlaziti iz uPetlji
@@ -1064,6 +1148,24 @@ public class SemantickiAnalizator {
 			if(izravni_deklarator.getTip().startsWith("const") || izravni_deklarator.getTip().startsWith("niz const")){
 				ispisiGresku(cvor);
 			}
+			
+			String lokacija;
+			if(trenutniDjelokrug.roditeljDjelokrug!=null){//T0D0 apsolutno neprovjereno
+				int offset = trenutniDjelokrug.getOffset(izravni_deklarator.inf.ime);
+				if(izravni_deklarator.inf.tip.startsWith("niz")){
+					for(int i=0;i<izravni_deklarator.inf.br_elem;i++){
+						program.dodajLiniju(" POP R0");
+						program.dodajLiniju(" STORE R0, (R7+"+Integer.toHexString(offset+i*4)+")");//TODO ovo mozda nebude radilo
+					}
+				}
+			}
+			else{
+				if(izravni_deklarator.inf.tip.startsWith("niz")){
+					
+					program.dodajNaKraj("G_"+izravni_deklarator.inf.ime+" `DS "+Integer.toHexString(izravni_deklarator.inf.br_elem*4));
+				}
+			}
+			
 		}
 		
 		
@@ -1084,15 +1186,35 @@ public class SemantickiAnalizator {
 			
 			String lokacija;
 			if(trenutniDjelokrug.roditeljDjelokrug!=null){
-				lokacija = trenutniDjelokrug.getLokaciju(izravni_deklarator.inf.ime);//TODO ne odmah dodat linije nego utvrditi koji podatak ide u var
-				program.dodajLiniju(" POP R0");
 				
-				program.dodajLiniju(" STORE R0, ("+lokacija+")");
+				lokacija = trenutniDjelokrug.getLokaciju(izravni_deklarator.inf.ime);
+				if(izravni_deklarator.inf.tip.startsWith("niz")){
+					
+					for(int i=0;i<inicijalizator.inf.vrijednosti.size();i++){
+						program.dodajLiniju(" POP R0");
+						program.dodajLiniju(" STORE R0, ("+lokacija+")");//TODO ovo mozda nebude radilo
+					}
+				}
+				else{
+					lokacija = trenutniDjelokrug.getLokaciju(izravni_deklarator.inf.ime);
+					program.dodajLiniju(" POP R0");
+					program.dodajLiniju(" STORE R0, ("+lokacija+")");
+				}
 			}
 			else{
-				globalneVarijable.put(izravni_deklarator.inf.ime, inicijalizator.inf.vrijednost);
-				lokacija = "G_"+izravni_deklarator.inf.ime;
-				program.dodajNaKraj("G_"+izravni_deklarator.inf.ime+" DW %D "+inicijalizator.inf.vrijednost);
+				
+				if(izravni_deklarator.inf.tip.startsWith("niz")){
+					String linija ="G_"+izravni_deklarator.inf.ime+" DW %D ";
+					for(String i : inicijalizator.inf.vrijednosti){
+						linija=linija+i+", %D ";
+					}
+					program.dodajNaKraj(linija.substring(0, linija.length()-5));//micanje zareza
+				}
+				else{
+					globalneVarijable.put(izravni_deklarator.inf.ime, inicijalizator.inf.vrijednost);
+					program.dodajNaKraj("G_"+izravni_deklarator.inf.ime+" DW %D "+inicijalizator.inf.vrijednost);
+				}
+				
 			}
 			
 			
@@ -1287,6 +1409,7 @@ public class SemantickiAnalizator {
 			cvor.inf.br_elem = lista_izraza_pridruzivanja.inf.br_elem;
 			cvor.inf.tipovi.addAll(lista_izraza_pridruzivanja.inf.tipovi);
 			
+			cvor.inf.vrijednosti.addAll(lista_izraza_pridruzivanja.inf.vrijednosti);
 		}
 		
 		
@@ -1298,6 +1421,7 @@ public class SemantickiAnalizator {
 			cvor.inf = new Informacija();//cudno fali tip
 			cvor.inf.br_elem = 1;
 			cvor.inf.tipovi.add(izraz_pridruzivanja.getTip());
+			cvor.inf.vrijednosti.add(izraz_pridruzivanja.inf.vrijednost);
 		}
 		if(cvor.trenutacna_produkcija().equals("<lista_izraza_pridruzivanja> ::= <lista_izraza_pridruzivanja> ZAREZ <izraz_pridruzivanja>")){
 			Cvor lista_izraza_pridruzivanja = cvor.djeca.get(0);
@@ -1310,6 +1434,9 @@ public class SemantickiAnalizator {
 			cvor.inf.br_elem = lista_izraza_pridruzivanja.inf.br_elem+1;
 			cvor.inf.tipovi.addAll(lista_izraza_pridruzivanja.inf.tipovi);
 			cvor.inf.tipovi.add(izraz_pridruzivanja.getTip());
+
+			cvor.inf.vrijednosti.addAll(lista_izraza_pridruzivanja.inf.vrijednosti);
+			cvor.inf.vrijednosti.add(izraz_pridruzivanja.inf.vrijednost);
 		}
 		
 	}

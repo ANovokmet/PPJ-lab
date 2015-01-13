@@ -89,6 +89,15 @@ public class Djelokrug {
 	
 	public void dodajNizUTablicu(String tip, String naziv, int br_elem){
 		tablica_lokalnih_imena.put(naziv, new Informacija(tip, br_elem));
+		
+		if(roditeljDjelokrug!=null){
+			lokacije_lokalnih_imena.put(naziv, odmak);
+			System.out.println("Dodan "+naziv+"R7+"+odmak);
+			odmak+=4*br_elem;
+		}
+		else{
+			globalna_imena.add(naziv);
+		}
 	}
 	
 	public Informacija dodajFunkcijuUTablicu(String tip, String naziv, ArrayList<String> tipovi){
@@ -166,6 +175,45 @@ public class Djelokrug {
 			}
 		}
 	}
+	
+	
+	public Integer getOffset(String ime){
+		if(lokacije_lokalnih_imena.containsKey(ime)){
+			return lokacije_lokalnih_imena.get(ime)+relodmak;
+		}
+		else{
+			if(roditeljDjelokrug!=null){
+				return roditeljDjelokrug.getOffset(ime);
+			}
+			else{
+				return null;
+			}
+		}
+	}
+	
+	public String lokacija(String ime, int elem){
+		if(samoUGlobalnom(ime)){
+			return "G_"+ime+"+0"+Integer.toHexString(elem*4);
+		}
+		else{
+			return getLokaciju(ime, elem);
+		}
+	}
+	
+	public String getLokaciju(String ime, int elem){
+		if(lokacije_lokalnih_imena.containsKey(ime)){
+			return "R7+0"+Integer.toHexString(lokacije_lokalnih_imena.get(ime)+relodmak+elem*4);
+		}
+		else{
+			if(roditeljDjelokrug!=null){
+				return roditeljDjelokrug.getLokaciju(ime, elem);
+			}
+			else{
+				return null;
+			}
+		}
+	}
+	
 	
 	public boolean sadrziFju(String ime){
 		if(tablica_lokalnih_imena.containsKey(ime)){
