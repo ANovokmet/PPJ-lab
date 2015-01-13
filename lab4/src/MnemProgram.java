@@ -31,10 +31,46 @@ public class MnemProgram {
 		}
 	}
 
-
+	public void dodajNaPocetak(String string) {
+		// TODO Auto-generated method stub
+		linije.add(0, string);
+	}
+	
+	public void dodajNaPocFje(String string) {//TODO oznaciti djelokrug sa D_xxx u programu
+		// TODO Auto-generated method stub
+		for(int i=linije.size()-1;i>=0;i--){
+			if(linije.get(i).startsWith("F_")){
+				linije.add(i+1, string);
+				break;
+			}
+		}
+		
+	}
+	
+	public void dodajNaPocDje(String string, int id) {//TODO oznaciti djelokrug sa D_xxx u programu
+		// TODO Auto-generated method stub
+		for(int i=linije.size()-1;i>=0;i--){
+			if(linije.get(i).equals("U_D_"+id)){
+				linije.add(i+1, string);
+				break;
+			}
+		}
+		
+	}
 
 	public void dodajNaKraj(String string) {
 		// TODO Auto-generated method stub
 		kraj.add(string);
+	}
+
+
+
+	public void dodajPredRet(String string) {
+		for(int i=linije.size()-1;i>=0;i--){
+			if(linije.get(i).startsWith(" RET")){
+				linije.add(i, string);
+				break;
+			}
+		}
 	}
 }

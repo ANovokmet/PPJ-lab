@@ -12,6 +12,7 @@ public class SemantickiAnalizator {
 	static Djelokrug globalniDjelokrug;//može i bez
 	static Djelokrug trenutniDjelokrug;
 	
+	static int idDjelokrug;
 	
 	static HashMap<String, Informacija> definiraneFunkcije;
 	static Informacija trenutnaFunkcija;
@@ -20,14 +21,17 @@ public class SemantickiAnalizator {
 	
 	static HashMap<String, String> globalneVarijable;
 	
+	static boolean u_listi_parametara = false;
+	
 	public static void main(String[] args) throws IOException {
 		definiraneFunkcije = new HashMap<String, Informacija>();
 		trenutnaFunkcija = null;
+		idDjelokrug = 0;
 		
 		program = new MnemProgram();
 		
 		//BufferedReader bf = new BufferedReader(new InputStreamReader(System.in));
-		BufferedReader bf = new BufferedReader(new FileReader("npr/12_fun2/test.in"));
+		BufferedReader bf = new BufferedReader(new FileReader("npr/18_init_izraz/test.in"));
 		Cvor glavni = Cvor.stvori_stablo_iz_filea(bf);
 		
 		globalneVarijable = new HashMap<String, String>();
@@ -55,8 +59,18 @@ public class SemantickiAnalizator {
 				
 				if(cvor.inf.isFunkcija!=true){
 					String lokacija = trenutniDjelokrug.lokacija(cvor.inf.ime);
-					program.dodajLiniju(" LOAD R0, ("+lokacija+")");
-					program.dodajLiniju(" PUSH R0");
+					if(trenutniDjelokrug.samoUGlobalnom(cvor.inf.ime)){
+						program.dodajLiniju(" LOAD R0, ("+lokacija+")");
+						program.dodajLiniju(" PUSH R0");
+						Djelokrug.relodmak+=4;
+					}
+					else{
+						program.dodajLiniju(" LOAD R0, ("+lokacija+")");
+						program.dodajLiniju(" PUSH R0");
+					}
+					
+					
+					
 				}
 			}
 			else{
@@ -103,7 +117,7 @@ public class SemantickiAnalizator {
 			
 			cvor.inf = new Informacija("char");
 			cvor.inf.l_izraz = false;
-			cvor.inf.vrijednost = cvor.djeca.get(0).ime_iz_koda;
+			cvor.inf.vrijednost = Integer.toString((int)cvor.djeca.get(0).ime_iz_koda.charAt(1));
 		}
 		if(cvor.trenutacna_produkcija().equals("<primarni_izraz> ::= NIZ_ZNAKOVA")){
 			//niz mora bit ispravan po 4.3.2
@@ -176,6 +190,7 @@ public class SemantickiAnalizator {
 			Cvor lista_argumenata = cvor.djeca.get(2);
 			//cudno doraditi
 			provjeri(postfiks_izraz);
+			
 			provjeri(lista_argumenata);
 			//cudno, jel fja smije bit void?
 			
@@ -619,6 +634,8 @@ public class SemantickiAnalizator {
 			//tip i l-izraz
 			provjeri(cvor.djeca.get(0));
 			
+			Djelokrug.relodmak = 0;//reset relativnih lokacija
+			
 			cvor.inf = cvor.djeca.get(0).inf;
 		}
 		if(cvor.trenutacna_produkcija().equals("<izraz> ::= <izraz> ZAREZ <izraz_pridruzivanja>")){
@@ -639,7 +656,16 @@ public class SemantickiAnalizator {
 		if(cvor.trenutacna_produkcija().equals("<slozena_naredba> ::= L_VIT_ZAGRADA <lista_deklaracija> <lista_naredbi> D_VIT_ZAGRADA")){
 			// odvojeni djelokrug 
 			provjeri(cvor.djeca.get(1));
+			
+			Cvor lista_deklaracija = cvor.djeca.get(1);
+			/*for(int i=0; i<lista_deklaracija.inf.imena.size();i++){
+				trenutniDjelokrug.lokacije_lokalnih_imena.put(lista_deklaracija.inf.imena.get(i), "R7+"+i*4);
+			}*/
+			program.dodajNaPocDje(" SUB R7, "+lista_deklaracija.inf.imena.size()*4+", R7", idDjelokrug);
+			
 			provjeri(cvor.djeca.get(2));
+			
+			program.dodajPredRet(" ADD R7, "+lista_deklaracija.inf.imena.size()*4+", R7");
 			
 		}
 		
@@ -655,7 +681,14 @@ public class SemantickiAnalizator {
 		if(cvor.trenutacna_produkcija().equals("<naredba> ::= <slozena_naredba>")){
 			Djelokrug djelokrug = new Djelokrug(trenutniDjelokrug);//udji u djelokrug
 			trenutniDjelokrug = djelokrug;
+			
+			int id = ++idDjelokrug;
+			program.dodajLiniju("U_D_"+id);
+			
 			provjeri(cvor.djeca.get(0));
+			
+			program.dodajLiniju("IZ_D_"+id);
+			trenutniDjelokrug.vratiOdmak();
 			trenutniDjelokrug = trenutniDjelokrug.roditeljDjelokrug;//izadji
 		}
 		if(cvor.trenutacna_produkcija().equals("<naredba> ::= <izraz_naredba>")
@@ -832,7 +865,12 @@ public class SemantickiAnalizator {
 			Djelokrug djelokrug = new Djelokrug(trenutniDjelokrug);//udji u djelokrug
 			trenutniDjelokrug = djelokrug;
 			
+			int id = ++idDjelokrug;
+			program.dodajLiniju("U_D_"+id);
+			
 			provjeri(cvor.djeca.get(5));
+			program.dodajLiniju("IZ_D_"+id);
+			trenutniDjelokrug.vratiOdmak();
 			
 			trenutniDjelokrug = trenutniDjelokrug.roditeljDjelokrug;//izadji
 			trenutnaFunkcija = null; //izaði izvan funkcije
@@ -854,8 +892,10 @@ public class SemantickiAnalizator {
 				ispisiGresku(cvor);
 			}
 			program.dodajLiniju("F_"+IDN.ime_iz_koda);
-			
+
 			provjeri(lista_parametara);
+			
+			
 			
 			if(globalniDjelokrug.sadrziIdn(IDN.ime_iz_koda)){
 				Informacija deklaracija = globalniDjelokrug.getIdentifikator(IDN.ime_iz_koda);
@@ -885,11 +925,17 @@ public class SemantickiAnalizator {
 			trenutnaFunkcija = trenutniDjelokrug.dodajFunkcijuUTablicu(ime_tipa.getTip(), IDN.ime_iz_koda, lista_parametara.inf.tipovi);
 			trenutnaFunkcija.ime = IDN.ime_iz_koda;
 			
+			int id = ++idDjelokrug;
+			program.dodajLiniju("U_D_"+id);
 			Djelokrug djelokrug = new Djelokrug(trenutniDjelokrug);//udji u djelokrug
-			Djelokrug.stog-=4;
+			program.dodajLiniju("IZ_D_"+id);
+			trenutniDjelokrug.vratiOdmak();
+			
 			for(int i=0;i<lista_parametara.inf.tipovi.size();i++){//ovdje se samo imena parametara koriste
-				
+				//TODO ovdje onaj r7 4 r7 moze
 				djelokrug.dodajIdentifikatorUTablicu(lista_parametara.inf.tipovi.get(i), lista_parametara.inf.imena.get(i));
+				
+				//djelokrug.lokacije_lokalnih_imena.put(lista_parametara.inf.imena.get(i), "R7+"+(i+1)*4); TODO R7+
 			}
 			trenutniDjelokrug = djelokrug;
 			
@@ -899,8 +945,7 @@ public class SemantickiAnalizator {
 			//program.dodajLiniju(" ADD R7, "+4*lista_parametara.inf.tipovi.size()+", R7");
 			
 			trenutniDjelokrug = trenutniDjelokrug.roditeljDjelokrug;
-			trenutnaFunkcija = null; 
-			Djelokrug.stog+=4;
+			trenutnaFunkcija = null;
 		}
 		
 		
@@ -961,10 +1006,16 @@ public class SemantickiAnalizator {
 		
 		if(cvor.trenutacna_produkcija().equals("<lista_deklaracija> ::= <deklaracija>")){
 			provjeri(cvor.djeca.get(0));
+			
+			cvor.inf = cvor.djeca.get(0).inf;
 		}
 		if(cvor.trenutacna_produkcija().equals("<lista_deklaracija> ::= <lista_deklaracija> <deklaracija>")){
 			provjeri(cvor.djeca.get(0));
 			provjeri(cvor.djeca.get(1));
+			
+			cvor.inf = cvor.djeca.get(0).inf;
+			cvor.inf.imena.addAll(cvor.djeca.get(1).inf.imena);
+			cvor.inf.tipovi.addAll(cvor.djeca.get(1).inf.tipovi);
 		}
 		
 		if(cvor.trenutacna_produkcija().equals("<deklaracija> ::= <ime_tipa> <lista_init_deklaratora> TOCKAZAREZ")){
@@ -974,13 +1025,20 @@ public class SemantickiAnalizator {
 			cvor.djeca.get(1).ntip=cvor.djeca.get(0).getTip();
 			provjeri(cvor.djeca.get(1));//uz nasljedno svojstvo <lista_init...><-<imetipa>.tip
 			
-			System.out.println(cvor.djeca.get(1).inf.ime);
+			
+			cvor.inf = new Informacija();
+			for(String ime : cvor.djeca.get(1).inf.imena){
+				cvor.inf.imena.add(ime);
+				cvor.inf.tipovi.add(cvor.djeca.get(0).inf.tip);
+			}
+			
 		}
 		
 		if(cvor.trenutacna_produkcija().equals("<lista_init_deklaratora> ::= <init_deklarator>")){
 			cvor.djeca.get(0).ntip=cvor.ntip;
 			provjeri(cvor.djeca.get(0));
 			cvor.inf = cvor.djeca.get(0).inf;
+			cvor.inf.imena.add(cvor.djeca.get(0).inf.ime);
 		}
 		if(cvor.trenutacna_produkcija().equals("<lista_init_deklaratora> ::= <lista_init_deklaratora> ZAREZ <init_deklarator>")){
 			
@@ -989,6 +1047,10 @@ public class SemantickiAnalizator {
 			
 			cvor.djeca.get(2).ntip = cvor.ntip;
 			provjeri(cvor.djeca.get(2));
+			
+			cvor.inf = cvor.djeca.get(0).inf;
+			//cvor.inf.imena.addAll(cvor.djeca.get(0).inf.imena);
+			cvor.inf.imena.add(cvor.djeca.get(2).inf.ime);
 		}
 		
 		if(cvor.trenutacna_produkcija().equals("<init_deklarator> ::= <izravni_deklarator>")){
@@ -1023,7 +1085,9 @@ public class SemantickiAnalizator {
 			String lokacija;
 			if(trenutniDjelokrug.roditeljDjelokrug!=null){
 				lokacija = trenutniDjelokrug.getLokaciju(izravni_deklarator.inf.ime);//TODO ne odmah dodat linije nego utvrditi koji podatak ide u var
-				program.dodajLiniju(" LOAD R0, ("+lokacija+")");
+				program.dodajLiniju(" POP R0");
+				
+				program.dodajLiniju(" STORE R0, ("+lokacija+")");
 			}
 			else{
 				globalneVarijable.put(izravni_deklarator.inf.ime, inicijalizator.inf.vrijednost);
