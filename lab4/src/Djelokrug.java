@@ -74,7 +74,7 @@ public class Djelokrug {
 		
 		if(roditeljDjelokrug!=null){
 			lokacije_lokalnih_imena.put(naziv, odmak);
-			System.out.println("Dodan "+naziv+"R7+"+odmak);
+			System.out.println("Dodan "+tip+naziv+"R7+"+odmak);
 			odmak+=4;
 		}
 		else{
@@ -92,8 +92,8 @@ public class Djelokrug {
 		
 		if(roditeljDjelokrug!=null){
 			lokacije_lokalnih_imena.put(naziv, odmak);
-			System.out.println("Dodan "+naziv+"R7+"+odmak);
-			odmak+=4*br_elem;
+			System.out.println("Dodan "+tip+" "+naziv+"R7+"+odmak+" br:"+br_elem);
+			odmak+=4*br_elem+1;
 		}
 		else{
 			globalna_imena.add(naziv);
