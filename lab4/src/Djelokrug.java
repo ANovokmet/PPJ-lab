@@ -18,8 +18,10 @@ public class Djelokrug {
 	public HashMap<String, Integer> lokacije_lokalnih_imena;
 	public ArrayList<String> globalna_imena;
 	
-	public static int odmak;
+	public int odmak;
+	public int velTablice;
 	public static int relodmak;
+	public static int varOdmak; //odmak zbog varijabli
 	
 	public static ArrayList<String> deklFjeImena;
 	public static ArrayList<String> deklFjeTipovi;
@@ -28,7 +30,7 @@ public class Djelokrug {
 		deklFjeImena = new ArrayList<String>();
 		deklFjeTipovi = new ArrayList<String>();
 		deklFjeTipoviPar = new ArrayList<ArrayList<String>>();
-		odmak = 0;
+		varOdmak = 0;
 		relodmak = 0;
 	}
 	
@@ -39,7 +41,8 @@ public class Djelokrug {
 		this.roditeljDjelokrug = roditeljDjelokrug;
 		this.djecaDjelokrug = new ArrayList<Djelokrug>();
 		this.uPetlji = false;
-		
+		odmak = 0;
+		velTablice = 0;
 		globalna_imena = new ArrayList<String>();
 		
 		if(roditeljDjelokrug!=null){//ako nije korijen
@@ -76,12 +79,15 @@ public class Djelokrug {
 			lokacije_lokalnih_imena.put(naziv, odmak);
 			System.out.println("Dodan "+tip+naziv+"R7+"+odmak);
 			odmak+=4;
+			velTablice+= 1;
 		}
 		else{
 			globalna_imena.add(naziv);
 		}
 		
 	}
+	
+	
 	
 	public void vratiOdmak(){
 		odmak-=lokacije_lokalnih_imena.size()*4;
@@ -93,7 +99,8 @@ public class Djelokrug {
 		if(roditeljDjelokrug!=null){
 			lokacije_lokalnih_imena.put(naziv, odmak);
 			System.out.println("Dodan "+tip+" "+naziv+"R7+"+odmak+" br:"+br_elem);
-			odmak+=4*br_elem+1;
+			odmak+=4*(br_elem+1);
+			velTablice+= (br_elem+1);
 		}
 		else{
 			globalna_imena.add(naziv);
@@ -176,6 +183,21 @@ public class Djelokrug {
 		}
 	}
 	
+	//samo za one ne u globalnom
+	
+	public Integer getOdmak(String ime){//TODO
+		if(lokacije_lokalnih_imena.containsKey(ime)){
+			return lokacije_lokalnih_imena.get(ime)+varOdmak;
+		}
+		else{
+			if(roditeljDjelokrug!=null){
+				return roditeljDjelokrug.getOdmak(ime)+velTablice*4;//+4 ak je funkcija
+			}
+			else{
+				return null;
+			}
+		}
+	}
 	
 	public Integer getOffset(String ime){
 		if(lokacije_lokalnih_imena.containsKey(ime)){
