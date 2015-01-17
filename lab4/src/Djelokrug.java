@@ -20,7 +20,6 @@ public class Djelokrug {
 	
 	public int odmak;
 	public int velTablice;
-	public static int relodmak;
 	public static int varOdmak; //odmak zbog varijabli
 	
 	public static ArrayList<String> deklFjeImena;
@@ -31,7 +30,7 @@ public class Djelokrug {
 		deklFjeTipovi = new ArrayList<String>();
 		deklFjeTipoviPar = new ArrayList<ArrayList<String>>();
 		varOdmak = 0;
-		relodmak = 0;
+		
 	}
 	
 	
@@ -76,12 +75,11 @@ public class Djelokrug {
 		tablica_lokalnih_imena.put(naziv, novaInf);
 		
 		if(roditeljDjelokrug!=null){
-			sveLokalneUvecaj();
+			sveLokalneUvecaj(1);
 			
 			lokacije_lokalnih_imena.put(naziv, 0);
-			System.out.println("Dodan "+tip+naziv+"R7+"+odmak);
 			
-			odmak+=4;
+			
 			velTablice+= 1;
 		}
 		else{
@@ -90,24 +88,21 @@ public class Djelokrug {
 		
 	}
 	
-	private void sveLokalneUvecaj(){
+	private void sveLokalneUvecaj(int i){
 		for(String key: lokacije_lokalnih_imena.keySet()){
-			System.out.println("uvecao "+key+(lokacije_lokalnih_imena.get(key)+4));
-			lokacije_lokalnih_imena.put(key, lokacije_lokalnih_imena.get(key)+4);
+			lokacije_lokalnih_imena.put(key, lokacije_lokalnih_imena.get(key)+i*4);
 		}
 	}
 	
-	public void vratiOdmak(){
-		odmak-=lokacije_lokalnih_imena.size()*4;
-	}
 	
 	public void dodajNizUTablicu(String tip, String naziv, int br_elem){
 		tablica_lokalnih_imena.put(naziv, new Informacija(tip, br_elem));
 		
 		if(roditeljDjelokrug!=null){
-			lokacije_lokalnih_imena.put(naziv, odmak);
-			System.out.println("Dodan "+tip+" "+naziv+"R7+"+odmak+" br:"+br_elem);
-			odmak+=4*(br_elem+1);
+			sveLokalneUvecaj(br_elem+1);
+			
+			lokacije_lokalnih_imena.put(naziv, 0);
+			
 			velTablice+= (br_elem+1);
 		}
 		else{
@@ -173,30 +168,16 @@ public class Djelokrug {
 			return "G_"+ime;
 		}
 		else{
-			return getLokaciju(ime);
+			return "R7+"+Integer.toHexString(getOdmak(ime));
 		}
 	}
 	
-	public String getLokaciju(String ime){
-		if(lokacije_lokalnih_imena.containsKey(ime)){
-			
-			return "R7+0"+Integer.toHexString(lokacije_lokalnih_imena.get(ime)+relodmak);
-		}
-		else{
-			if(roditeljDjelokrug!=null){
-				return roditeljDjelokrug.getLokaciju(ime);
-			}
-			else{
-				return null;
-			}
-		}
-	}
+	
 	
 	//samo za one ne u globalnom
 	
 	public Integer getOdmak(String ime){//TODO
 		if(lokacije_lokalnih_imena.containsKey(ime)){
-			System.out.println("vratit cu"+lokacije_lokalnih_imena.get(ime)+"+"+varOdmak);
 			return lokacije_lokalnih_imena.get(ime)+varOdmak;
 		}
 		else{
@@ -209,42 +190,7 @@ public class Djelokrug {
 		}
 	}
 	
-	public Integer getOffset(String ime){
-		if(lokacije_lokalnih_imena.containsKey(ime)){
-			return lokacije_lokalnih_imena.get(ime)+relodmak;
-		}
-		else{
-			if(roditeljDjelokrug!=null){
-				return roditeljDjelokrug.getOffset(ime);
-			}
-			else{
-				return null;
-			}
-		}
-	}
 	
-	public String lokacija(String ime, int elem){
-		if(samoUGlobalnom(ime)){
-			return "G_"+ime+"+0"+Integer.toHexString(elem*4);
-		}
-		else{
-			return getLokaciju(ime, elem);
-		}
-	}
-	
-	public String getLokaciju(String ime, int elem){
-		if(lokacije_lokalnih_imena.containsKey(ime)){
-			return "R7+0"+Integer.toHexString(lokacije_lokalnih_imena.get(ime)+relodmak+elem*4);
-		}
-		else{
-			if(roditeljDjelokrug!=null){
-				return roditeljDjelokrug.getLokaciju(ime, elem);
-			}
-			else{
-				return null;
-			}
-		}
-	}
 	
 	
 	public boolean sadrziFju(String ime){
