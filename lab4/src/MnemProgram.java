@@ -16,7 +16,17 @@ public class MnemProgram {
 		linije.add(" HALT");
 	}
 	
-		
+	public void mnozenje(){
+		System.out.println("");
+	}
+	
+	public void djeljenje(){
+		System.out.println("");
+	}
+	
+	public void modiranje(){
+		System.out.println("");
+	}
 	
 	public void dodajLiniju(String linija){
 		linije.add(linija);

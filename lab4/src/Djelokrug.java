@@ -168,7 +168,7 @@ public class Djelokrug {
 			return "G_"+ime;
 		}
 		else{
-			return "R7+"+Integer.toHexString(getOdmak(ime));
+			return "R7+0"+Integer.toHexString(getOdmak(ime));
 		}
 	}
 	

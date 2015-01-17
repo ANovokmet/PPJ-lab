@@ -16,6 +16,7 @@ public class Cvor {
 	public int index;   //index u listi objekata, koristi se pri stvaranju stabla
 	public boolean vrativrjednost;
 	public boolean pridruzujemuse;
+	public boolean pridruzujese;
 	private static ArrayList<HashMap<String,String>> lista;
 	
 	public Cvor(){
