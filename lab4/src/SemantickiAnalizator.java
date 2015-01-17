@@ -908,6 +908,9 @@ public class SemantickiAnalizator {
 
 		if(cvor.trenutacna_produkcija().equals("<izraz_naredba> ::= TOCKAZAREZ")){
 			cvor.inf = new Informacija("int");
+			program.dodajLiniju(" MOV 1,R0");  //ako nema uvijeta, for petlja se vrti beskonacno
+			program.dodajLiniju(" PUSH R0");
+			Djelokrug.varOdmak+=4;			
 		}
 		if(cvor.trenutacna_produkcija().equals("<izraz_naredba> ::= <izraz> TOCKAZAREZ")){
 			provjeri(cvor.djeca.get(0));
@@ -952,20 +955,33 @@ public class SemantickiAnalizator {
 		}
 		// ovdje ulaziti i izlaziti iz uPetlji
 		if(cvor.trenutacna_produkcija().equals("<naredba_petlje> ::= KR_WHILE L_ZAGRADA <izraz> D_ZAGRADA <naredba>")){
+			program.dodajLiniju("petlja"+Djelokrug.broj_petlji);//if naredba
 			provjeri(cvor.djeca.get(2));
 			if(!implicitnoPretvoriva(cvor.djeca.get(2).inf,"int")){
 				ispisiGresku(cvor);
 			}
+			program.dodajLiniju(" POP R0");//if naredba
+			Djelokrug.varOdmak-=4;
+			program.dodajLiniju(" CMP R0,0");
+			program.dodajLiniju(" JP_EQ izadji"+Djelokrug.broj_petlji);
 			trenutniDjelokrug.uPetlji=true;
 			unutarPetlji++;
 			provjeri(cvor.djeca.get(4));
+			program.dodajLiniju(" JP petlja"+Djelokrug.broj_petlji);
+			program.dodajLiniju("izadji"+Djelokrug.broj_petlji);
+			Djelokrug.broj_petlji+=1;
 			unutarPetlji--;
 			trenutniDjelokrug.uPetlji=false;
 		}
 		if(cvor.trenutacna_produkcija().equals("<naredba_petlje> ::= KR_FOR L_ZAGRADA <izraz_naredba> <izraz_naredba> D_ZAGRADA <naredba>")){
+			program.dodajLiniju("petlja"+Djelokrug.broj_petlji);
 			provjeri(cvor.djeca.get(2));
 			provjeri(cvor.djeca.get(3));
 			
+			program.dodajLiniju(" POP R0");//if naredba
+			Djelokrug.varOdmak-=4;
+			program.dodajLiniju(" CMP R0,0");
+			program.dodajLiniju(" JP_EQ izadji"+Djelokrug.broj_petlji);
 			
 			if(!implicitnoPretvoriva(cvor.djeca.get(3).inf,"int")){
 				ispisiGresku(cvor);
@@ -973,12 +989,20 @@ public class SemantickiAnalizator {
 			trenutniDjelokrug.uPetlji=true;
 			unutarPetlji++;
 			provjeri(cvor.djeca.get(5));
+			program.dodajLiniju(" JP petlja"+Djelokrug.broj_petlji);
+			program.dodajLiniju("izadji"+Djelokrug.broj_petlji);
+			Djelokrug.broj_petlji+=1;
 			unutarPetlji--;
 			trenutniDjelokrug.uPetlji=false;
 		}
 		if(cvor.trenutacna_produkcija().equals("<naredba_petlje> ::= KR_FOR L_ZAGRADA <izraz_naredba> <izraz_naredba> <izraz> D_ZAGRADA <naredba>")){
+			program.dodajLiniju("petlja"+Djelokrug.broj_petlji);
 			provjeri(cvor.djeca.get(2));
 			provjeri(cvor.djeca.get(3));
+			program.dodajLiniju(" POP R0");//if naredba
+			Djelokrug.varOdmak-=4;
+			program.dodajLiniju(" CMP R0,0");
+			program.dodajLiniju(" JP_EQ izadji"+Djelokrug.broj_petlji);
 			if(!implicitnoPretvoriva(cvor.djeca.get(3).inf,"int")){
 				ispisiGresku(cvor);
 			}
@@ -986,6 +1010,9 @@ public class SemantickiAnalizator {
 			unutarPetlji++;
 			trenutniDjelokrug.uPetlji=true;
 			provjeri(cvor.djeca.get(6));
+			program.dodajLiniju(" JP petlja"+Djelokrug.broj_petlji);
+			program.dodajLiniju("izadji"+Djelokrug.broj_petlji);
+			Djelokrug.broj_petlji+=1;
 			unutarPetlji--;
 			trenutniDjelokrug.uPetlji=false;
 		}

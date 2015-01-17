@@ -25,6 +25,7 @@ public class Djelokrug {
 	public static ArrayList<String> deklFjeImena;
 	public static ArrayList<String> deklFjeTipovi;
 	public static ArrayList<ArrayList<String>> deklFjeTipoviPar;
+	public static int broj_petlji=0;  //sluzi za razlikovanje labela pri generiranju koda za petlje
 	static {
 		deklFjeImena = new ArrayList<String>();
 		deklFjeTipovi = new ArrayList<String>();

@@ -1,0 +1,113 @@
+ MOVE 40000, R7   ;mnozenje
+ MOVE %D 2, R0
+ PUSH R0
+ MOVE %D -1, R0
+ PUSH R0
+ CALL pomnozi
+ HALT
+pomnozi PUSH R0
+ PUSH R1
+ LOAD R0, (R7+0C)
+ LOAD R1, (R7+10)
+ MOVE 0, R6
+ CMP R0,0
+ JP_EQ kraj
+ CMP R1,0
+ JP_EQ kraj
+ CMP R0,0
+ JP_N manjiodnule
+petlja ADD R6,R1,R6
+ SUB R0,1,R0
+ JP_NZ petlja
+kraj LOAD R0,(R7+08)
+ STORE R0,(R7+10)
+ POP R1
+ POP R0
+ ADD R7,08,R7
+ RET
+manjiodnule CMP R1,0
+ JP_NN dalje
+ XOR R0,-1,R0
+ ADD R0,1,R0
+ XOR R1,-1,R1
+ ADD R1,1,R1
+ JP petlja
+dalje PUSH R0
+ PUSH R1
+ POP R0
+ POP R1
+ JP petlja
+ 
+ 
+ 
+ 
+ 
+ MOVE 40000, R7     ;djeljenje
+ MOVE %D -3, R0   ;djelitelj
+ PUSH R0
+ MOVE %D -100, R0   ;djeljenik
+ PUSH R0
+ CALL podjeli
+ HALT
+podjeli PUSH R0
+ PUSH R1
+ PUSH R2
+ LOAD R0, (R7+10) ;djeljenik
+ LOAD R1, (R7+14) ;djelitelj
+ MOVE 0, R6
+ MOVE 0, R2
+ CMP R0,0
+ JP_EQ kraj_djeljenja
+ CMP R1,0
+ JP_EQ kraj_djeljenja
+ CMP R0,0
+ JP_NN preskoci
+ ADD R2,1,R2
+ XOR R0,-1,R0
+ ADD R0,1,R0
+preskoci CMP R1,0
+ JP_NN djeljenje
+ ADD R2,1,R2
+ XOR R1,-1,R1
+ ADD R1,1,R1
+djeljenje ADD R6,1,R6
+ SUB R0,R1,R0
+ JP_NN djeljenje
+ SUB R6,1,R6
+ CMP R2,1
+ JP_NE kraj_djeljenja
+ XOR R6,-1,R6
+ ADD R6,1,R6
+kraj_djeljenja LOAD R0,(R7+0C)
+ STORE R0,(R7+14)
+ POP R2
+ POP R1
+ POP R0
+ ADD R7,08,R7
+ RET
+ 
+ 
+ 
+ 
+ MOVE 40000, R7    ;modiranje
+ MOVE %D 7, R0   ;djelitelj
+ PUSH R0
+ MOVE %D 54, R0   ;djeljenik
+ PUSH R0
+ CALL ostatak
+ HALT
+ostatak PUSH R0
+ LOAD R6, (R7+08) ;djeljenik
+ LOAD R0, (R7+0C) ;djelitelj
+ CMP R0,0
+ JP_SLE kraj_modiranja
+ CMP R6,0
+ JP_SLE kraj_modiranja
+modiranje SUB R6,R0,R6
+ JP_NN modiranje
+ ADD R6,R0,R6
+kraj_modiranja LOAD R0,(R7+04)
+ STORE R0,(R7+0C)
+ POP R0
+ ADD R7,08,R7
+ RET
