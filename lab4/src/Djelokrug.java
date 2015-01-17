@@ -76,8 +76,11 @@ public class Djelokrug {
 		tablica_lokalnih_imena.put(naziv, novaInf);
 		
 		if(roditeljDjelokrug!=null){
-			lokacije_lokalnih_imena.put(naziv, odmak);
+			sveLokalneUvecaj();
+			
+			lokacije_lokalnih_imena.put(naziv, 0);
 			System.out.println("Dodan "+tip+naziv+"R7+"+odmak);
+			
 			odmak+=4;
 			velTablice+= 1;
 		}
@@ -87,7 +90,12 @@ public class Djelokrug {
 		
 	}
 	
-	
+	private void sveLokalneUvecaj(){
+		for(String key: lokacije_lokalnih_imena.keySet()){
+			System.out.println("uvecao "+key+(lokacije_lokalnih_imena.get(key)+4));
+			lokacije_lokalnih_imena.put(key, lokacije_lokalnih_imena.get(key)+4);
+		}
+	}
 	
 	public void vratiOdmak(){
 		odmak-=lokacije_lokalnih_imena.size()*4;
@@ -171,6 +179,7 @@ public class Djelokrug {
 	
 	public String getLokaciju(String ime){
 		if(lokacije_lokalnih_imena.containsKey(ime)){
+			
 			return "R7+0"+Integer.toHexString(lokacije_lokalnih_imena.get(ime)+relodmak);
 		}
 		else{
@@ -187,6 +196,7 @@ public class Djelokrug {
 	
 	public Integer getOdmak(String ime){//TODO
 		if(lokacije_lokalnih_imena.containsKey(ime)){
+			System.out.println("vratit cu"+lokacije_lokalnih_imena.get(ime)+"+"+varOdmak);
 			return lokacije_lokalnih_imena.get(ime)+varOdmak;
 		}
 		else{

@@ -14,7 +14,7 @@ public class Cvor {
 	//public boolean l_izraz;//boolean
 	public int razina;  //dubina u stablu
 	public int index;   //index u listi objekata, koristi se pri stvaranju stabla
-	
+	public boolean vrativrjednost;
 	private static ArrayList<HashMap<String,String>> lista;
 	
 	public Cvor(){
