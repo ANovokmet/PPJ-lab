@@ -6,15 +6,8 @@ public class MnemProgram {
 	ArrayList<String> linije;
 	ArrayList<String> kraj;
 	public HashMap<String, Integer> tablica_labeli;
-	boolean imadjeljenje;
-	boolean imamnozenje;
-	boolean imamodiranje;
+	
 	public MnemProgram(){
-		imadjeljenje = false;
-		imamnozenje = false;
-		imamodiranje= false;
-		
-		
 		linije = new ArrayList<String>();
 		kraj = new ArrayList<String>();
 		tablica_labeli = new HashMap<String,Integer>();
