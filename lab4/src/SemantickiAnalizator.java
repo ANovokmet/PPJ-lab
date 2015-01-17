@@ -286,15 +286,16 @@ public class SemantickiAnalizator {
 			
 			program.dodajLiniju(" POP R0");
 			Djelokrug.varOdmak-=4;
-			String lokacija = trenutniDjelokrug.lokacija(postfiks_izraz.inf.ime);
 			
+			program.dodajLiniju(" PUSH R0");
+			Djelokrug.varOdmak+=4;
+			String lokacija = trenutniDjelokrug.lokacija(postfiks_izraz.inf.ime);
 			if(cvor.djeca.get(1).ime_iz_koda.equals("++"))
 				program.dodajLiniju(" ADD R0, %D 1, R0");
 			else
 				program.dodajLiniju(" SUB R0, %D 1, R0");
 			program.dodajLiniju(" STORE R0, ("+lokacija+") ");
-			program.dodajLiniju(" PUSH R0");
-			Djelokrug.varOdmak+=4;
+			
 		}		
 		
 		if(cvor.trenutacna_produkcija().equals("<lista_argumenata> ::= <izraz_pridruzivanja>")){
@@ -466,12 +467,15 @@ public class SemantickiAnalizator {
 			
 			if(cvor.djeca.get(1).ime_iz_koda.equals("*")){
 				program.dodajLiniju(" CALL pomnozi");
+				program.imamnozenje = true;
 			}
 			else if(cvor.djeca.get(1).ime_iz_koda.equals("/")){
 				program.dodajLiniju(" CALL podjeli");
+				program.imadjeljenje = true;
 			}
 			else if(cvor.djeca.get(1).ime_iz_koda.equals("%")){
 				program.dodajLiniju(" CALL ostatak");
+				program.imamodiranje = true;
 			}
 			program.dodajLiniju(" MOVE R6, R0");
 			program.dodajLiniju(" PUSH R0");
