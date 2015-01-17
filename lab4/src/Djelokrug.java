@@ -182,7 +182,7 @@ public class Djelokrug {
 		}
 		else{
 			if(roditeljDjelokrug!=null){
-				return roditeljDjelokrug.getOdmak(ime)+velTablice*4;//+4 ak je funkcija
+				return roditeljDjelokrug.getOdmak(ime)+velTablice*4;
 			}
 			else{
 				return null;

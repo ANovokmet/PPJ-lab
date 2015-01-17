@@ -36,7 +36,7 @@ public class SemantickiAnalizator {
 		program = new MnemProgram();
 		
 		//BufferedReader bf = new BufferedReader(new InputStreamReader(System.in));
-		BufferedReader bf = new BufferedReader(new FileReader("npr/26_niz4/test.in"));
+		BufferedReader bf = new BufferedReader(new FileReader("npr/27_rek/test.in"));
 		Cvor glavni = Cvor.stvori_stablo_iz_filea(bf);
 		
 		globalneVarijable = new HashMap<String, String>();
@@ -76,9 +76,9 @@ public class SemantickiAnalizator {
 					}
 				}
 				else if(cvor.inf.tip.startsWith("niz")){
-					Integer lokacija = trenutniDjelokrug.getOdmak(cvor.inf.ime);
+					String lokacija = trenutniDjelokrug.lokacija(cvor.inf.ime);
 					if(!trenutniDjelokrug.samoUGlobalnom(cvor.inf.ime)){//lokalno deklarirani niz, pusha se adresa prvog clana
-						program.dodajLiniju(" LOAD R0, (R7+0"+Integer.toHexString(lokacija)+") ;lokacija adrese"+cvor.inf.tip.startsWith("niz"));
+						program.dodajLiniju(" LOAD R0, ("+lokacija+") ;lokacija adrese"+cvor.inf.tip.startsWith("niz"));
 						program.dodajLiniju(" PUSH R0 ;adresa niza "+cvor.inf.ime);
 						Djelokrug.varOdmak+=4;//relodmak
 					}
@@ -732,12 +732,12 @@ public class SemantickiAnalizator {
 			}
 			else{
 				Djelokrug.varOdmak-=4;
-				int lokacija = trenutniDjelokrug.getOdmak(postfiks_izraz.inf.ime);//TODO nevalja
+				String lokacija = trenutniDjelokrug.lokacija(postfiks_izraz.inf.ime);//TODO nevalja
 				if(cvor.djeca.get(2).inf.vrijednost!=null)
 					program.dodajLiniju(" MOVE %D "+cvor.djeca.get(2).inf.vrijednost+", "+postfiks_izraz.inf.ime);
 				else{
 					program.dodajLiniju(" POP R0");
-					program.dodajLiniju(" STORE R0, (R7+0"+lokacija+")");
+					program.dodajLiniju(" STORE R0, ("+lokacija+")");
 					
 				}
 			}
@@ -1243,7 +1243,8 @@ public class SemantickiAnalizator {
 			
 			provjeri(izravni_deklarator);
 			
-			program.dodajLiniju(" SUB R7, %D 4, R7 ;lokalne var");//prostor za lokalnu varijablu (i obicnu i onu za niz)
+			if(trenutniDjelokrug.roditeljDjelokrug!=null)//netreba za globalne ova naredba
+				program.dodajLiniju(" SUB R7, %D 4, R7 ;lokalne var");//prostor za lokalnu varijablu (i obicnu i onu za niz)
 			
 			provjeri(inicijalizator);
 			//TODO neznam
@@ -1395,11 +1396,11 @@ public class SemantickiAnalizator {
 			cvor.inf.ime = IDN.ime_iz_koda;
 			trenutniDjelokrug.dodajNizUTablicu(cvor.getTip(), IDN.ime_iz_koda, broj);
 			
-			
-			program.dodajLiniju(" SUB R7, %D "+broj*4+", R7 ;lokalne niz");
-			program.dodajLiniju(" STORE R7, (R7-4)  ;neznam nevalja");
-			
-			
+			if(trenutniDjelokrug.roditeljDjelokrug!=null){
+				program.dodajLiniju(" SUB R7, %D "+broj*4+", R7 ;lokalne niz");
+				program.dodajLiniju(" STORE R7, (R7-4)  ;neznam nevalja");
+				
+			}
 		}
 		
 		
