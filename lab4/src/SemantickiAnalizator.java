@@ -37,7 +37,7 @@ public class SemantickiAnalizator {
 		program = new MnemProgram();
 		
 		//BufferedReader bf = new BufferedReader(new InputStreamReader(System.in));
-		BufferedReader bf = new BufferedReader(new FileReader("npr/31_inc/test.in"));
+		BufferedReader bf = new BufferedReader(new FileReader("npr/29_for/test.in"));
 		Cvor glavni = Cvor.stvori_stablo_iz_filea(bf);
 		
 		globalneVarijable = new HashMap<String, String>();
@@ -1000,8 +1000,8 @@ public class SemantickiAnalizator {
 			trenutniDjelokrug.uPetlji=false;
 		}
 		if(cvor.trenutacna_produkcija().equals("<naredba_petlje> ::= KR_FOR L_ZAGRADA <izraz_naredba> <izraz_naredba> <izraz> D_ZAGRADA <naredba>")){
-			program.dodajLiniju("petlja"+Djelokrug.broj_petlji);
 			provjeri(cvor.djeca.get(2));
+			program.dodajLiniju("petlja"+Djelokrug.broj_petlji);
 			provjeri(cvor.djeca.get(3));
 			program.dodajLiniju(" POP R0");//if naredba
 			Djelokrug.varOdmak-=4;
