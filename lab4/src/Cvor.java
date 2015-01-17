@@ -15,6 +15,7 @@ public class Cvor {
 	public int razina;  //dubina u stablu
 	public int index;   //index u listi objekata, koristi se pri stvaranju stabla
 	public boolean vrativrjednost;
+	public boolean pridruzujemuse;
 	private static ArrayList<HashMap<String,String>> lista;
 	
 	public Cvor(){

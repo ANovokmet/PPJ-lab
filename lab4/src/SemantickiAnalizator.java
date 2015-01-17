@@ -36,7 +36,7 @@ public class SemantickiAnalizator {
 		program = new MnemProgram();
 		
 		//BufferedReader bf = new BufferedReader(new InputStreamReader(System.in));
-		BufferedReader bf = new BufferedReader(new FileReader("npr/35_params/test.in"));
+		BufferedReader bf = new BufferedReader(new FileReader("npr/28_rek_main/test.in"));
 		Cvor glavni = Cvor.stvori_stablo_iz_filea(bf);
 		
 		globalneVarijable = new HashMap<String, String>();
@@ -62,7 +62,7 @@ public class SemantickiAnalizator {
 				cvor.inf = new Informacija(trenutniDjelokrug.getIdentifikator(IDN.ime_iz_koda));
 				cvor.inf.ime = IDN.ime_iz_koda;
 				
-				if(cvor.inf.isFunkcija!=true && !cvor.inf.tip.startsWith("niz")){
+				if(cvor.inf.isFunkcija!=true && !cvor.inf.tip.startsWith("niz") && !cvor.pridruzujemuse){
 					String lokacija = trenutniDjelokrug.lokacija(cvor.inf.ime);
 					if(trenutniDjelokrug.samoUGlobalnom(cvor.inf.ime)){
 						program.dodajLiniju(" LOAD R0, ("+lokacija+")");
@@ -70,7 +70,7 @@ public class SemantickiAnalizator {
 						Djelokrug.varOdmak+=4;//trebalo bi ga dodat uvjek...
 					}
 					else{
-						program.dodajLiniju(" LOAD R0, (R7+0"+Integer.toHexString(trenutniDjelokrug.getOdmak(cvor.inf.ime))+")"+Djelokrug.varOdmak);
+						program.dodajLiniju(" LOAD R0, (R7+0"+Integer.toHexString(trenutniDjelokrug.getOdmak(cvor.inf.ime))+")");
 						program.dodajLiniju(" PUSH R0");
 						Djelokrug.varOdmak+=4;
 					}
@@ -155,7 +155,7 @@ public class SemantickiAnalizator {
 		
 		if(cvor.trenutacna_produkcija().equals("<postfiks_izraz> ::= <primarni_izraz>")){
 			cvor.djeca.get(0).ntip = cvor.ntip;//za OP_NEG
-			
+			cvor.djeca.get(0).pridruzujemuse = cvor.pridruzujemuse;
 			provjeri(cvor.djeca.get(0));
 			
 			cvor.inf = new Informacija(cvor.djeca.get(0).inf);
@@ -714,6 +714,7 @@ public class SemantickiAnalizator {
 		}
 		if(cvor.trenutacna_produkcija().equals("<izraz_pridruzivanja> ::= <postfiks_izraz> OP_PRIDRUZI <izraz_pridruzivanja>")){
 			Cvor postfiks_izraz = cvor.djeca.get(0);
+			postfiks_izraz.pridruzujemuse = true;
 			
 			provjeri(postfiks_izraz);
 			if(postfiks_izraz.inf.l_izraz!=true){
@@ -1251,7 +1252,7 @@ public class SemantickiAnalizator {
 			
 			izravni_deklarator.ntip = cvor.ntip;
 			
-			
+			izravni_deklarator.pridruzujemuse = true;
 			
 			provjeri(izravni_deklarator);
 			
