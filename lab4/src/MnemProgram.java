@@ -1,3 +1,4 @@
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -29,7 +30,7 @@ public class MnemProgram {
 		linije.add(linija);
 	}
 	
-	public void ispisi(){
+	public void ispisi(PrintStream st){
 		if(imadjeljenje){
 			djeljenje();
 		}
@@ -44,13 +45,13 @@ public class MnemProgram {
 		
 		
 		for(String linija:linije){
-			System.out.println(linija);
+			st.println(linija);
 		}
 		
 		
 		
 		for(String linija:kraj){
-			System.out.println(linija);
+			st.println(linija);
 		}
 	}
 
