@@ -38,7 +38,7 @@ public class GeneratorKoda {
 		program = new MnemProgram();
 		
 		//BufferedReader bf = new BufferedReader(new InputStreamReader(System.in));
-		BufferedReader bf = new BufferedReader(new FileReader("npr/36_params2/test.in"));
+		BufferedReader bf = new BufferedReader(new FileReader("npr/33_short/test.in"));
 		Cvor glavni = Cvor.stvori_stablo_iz_filea(bf);
 		
 		globalneVarijable = new HashMap<String, String>();
@@ -51,8 +51,8 @@ public class GeneratorKoda {
 		
 		provjeraNakonObilaska();
 		PrintStream file = new PrintStream("a.frisc");
-		//program.ispisi(file);
-		program.ispisi(System.out);
+		program.ispisi(file);
+		//program.ispisi(System.out);
 	}
 
 	public static void provjeri(Cvor cvor){
@@ -323,7 +323,7 @@ public class GeneratorKoda {
 		
 		if(cvor.trenutacna_produkcija().equals("<unarni_izraz> ::= <postfiks_izraz>")){
 			cvor.djeca.get(0).ntip = cvor.ntip;//za OP_NEG
-			cvor.djeca.get(0).pridruzujese = cvor.pridruzujese;
+			
 			provjeri(cvor.djeca.get(0));
 
 			cvor.inf = cvor.djeca.get(0).inf;
@@ -342,7 +342,7 @@ public class GeneratorKoda {
 		if(cvor.trenutacna_produkcija().equals("<unarni_izraz> ::= OP_INC <unarni_izraz>") ||
 				cvor.trenutacna_produkcija().equals("<unarni_izraz> ::= OP_DEC <unarni_izraz>")){
 			Cvor unarni_izraz = cvor.djeca.get(1);
-			cvor.djeca.get(1).pridruzujese = cvor.pridruzujese;
+			
 			provjeri(unarni_izraz);
 			
 			
@@ -354,10 +354,10 @@ public class GeneratorKoda {
 			else
 				program.dodajLiniju(" SUB R0, %D 1, R0");
 			program.dodajLiniju(" STORE R0, ("+lokacija+") ");
-			if(cvor.pridruzujese){
-				program.dodajLiniju(" PUSH R0");
-				Djelokrug.varOdmak+=4;
-			}
+			
+			program.dodajLiniju(" PUSH R0");
+			Djelokrug.varOdmak+=4;
+			
 			
 			if(unarni_izraz.inf.l_izraz!=true || !implicitnoPretvoriva(unarni_izraz.inf,"int")){
 				ispisiGresku(cvor);
@@ -416,7 +416,7 @@ public class GeneratorKoda {
 		
 		if(cvor.trenutacna_produkcija().equals("<cast_izraz> ::= <unarni_izraz>")){
 			cvor.djeca.get(0).ntip = cvor.ntip;//za OP_NEG
-			cvor.djeca.get(0).pridruzujese = cvor.pridruzujese;
+			
 			provjeri(cvor.djeca.get(0));
 			
 			cvor.inf = cvor.djeca.get(0).inf;
@@ -467,7 +467,6 @@ public class GeneratorKoda {
 		}
 		
 		if(cvor.trenutacna_produkcija().equals("<multiplikativni_izraz> ::= <cast_izraz>")){
-			cvor.djeca.get(0).pridruzujese = cvor.pridruzujese;
 			
 			provjeri(cvor.djeca.get(0));
 			
@@ -510,7 +509,6 @@ public class GeneratorKoda {
 		
 		
 		if(cvor.trenutacna_produkcija().equals("<aditivni_izraz> ::= <multiplikativni_izraz>")){
-			cvor.djeca.get(0).pridruzujese = cvor.pridruzujese;
 			
 			provjeri(cvor.djeca.get(0));
 			
@@ -518,8 +516,7 @@ public class GeneratorKoda {
 		}
 		if(cvor.trenutacna_produkcija().equals("<aditivni_izraz> ::= <aditivni_izraz> PLUS <multiplikativni_izraz>")
 				|| cvor.trenutacna_produkcija().equals("<aditivni_izraz> ::= <aditivni_izraz> MINUS <multiplikativni_izraz>")){
-			cvor.djeca.get(0).pridruzujese = true;
-			cvor.djeca.get(2).pridruzujese = true;
+			
 			
 			provjeri(cvor.djeca.get(0));
 			
@@ -549,7 +546,6 @@ public class GeneratorKoda {
 		
 		
 		if(cvor.trenutacna_produkcija().equals("<odnosni_izraz> ::= <aditivni_izraz>")){
-			cvor.djeca.get(0).pridruzujese = cvor.pridruzujese;
 			
 			provjeri(cvor.djeca.get(0));
 			
@@ -598,7 +594,6 @@ public class GeneratorKoda {
 		}
 		
 		if(cvor.trenutacna_produkcija().equals("<jednakosni_izraz> ::= <odnosni_izraz>")){
-			cvor.djeca.get(0).pridruzujese = cvor.pridruzujese;
 			
 			provjeri(cvor.djeca.get(0));
 			
@@ -643,7 +638,6 @@ public class GeneratorKoda {
 		
 		
 		if(cvor.trenutacna_produkcija().equals("<bin_i_izraz> ::= <jednakosni_izraz>")){
-			cvor.djeca.get(0).pridruzujese = cvor.pridruzujese;
 			
 			provjeri(cvor.djeca.get(0));
 			
@@ -673,7 +667,7 @@ public class GeneratorKoda {
 		
 		
 		if(cvor.trenutacna_produkcija().equals("<bin_xili_izraz> ::= <bin_i_izraz>")){
-			cvor.djeca.get(0).pridruzujese = cvor.pridruzujese;
+			
 			
 			provjeri(cvor.djeca.get(0));
 			
@@ -704,7 +698,6 @@ public class GeneratorKoda {
 		
 		
 		if(cvor.trenutacna_produkcija().equals("<bin_ili_izraz> ::= <bin_xili_izraz>")){
-			cvor.djeca.get(0).pridruzujese = cvor.pridruzujese;
 			
 			provjeri(cvor.djeca.get(0));
 			
@@ -735,7 +728,7 @@ public class GeneratorKoda {
 		
 		
 		if(cvor.trenutacna_produkcija().equals("<log_i_izraz> ::= <bin_ili_izraz>")){
-			cvor.djeca.get(0).pridruzujese = cvor.pridruzujese;
+			
 			
 			provjeri(cvor.djeca.get(0));
 			
@@ -744,34 +737,47 @@ public class GeneratorKoda {
 		if(cvor.trenutacna_produkcija().equals("<log_i_izraz> ::= <log_i_izraz> OP_I <bin_ili_izraz>")){//0&&x = 0 bez evaluacije x, 1||x isto
 			provjeri(cvor.djeca.get(0));
 			
-			++idEvaluacija;
-			
-			program.dodajLiniju(" POP R0");
-			program.dodajLiniju(" SUB R0, 0, R0");
-			
-			/*program.dodajLiniju(" MOVE %D 1, R0");
-			program.dodajLiniju(" JP_SLT TRUE_"+(++idUsporedba));
+			program.dodajLiniju(" POP R0");//stavi 0 ili 1 na stog
+			program.dodajLiniju(" CMP R0, 0");
+			program.dodajLiniju(" MOVE %D 1, R0");
+			program.dodajLiniju(" JP_NZ TRUE_"+(++idUsporedba));
 			program.dodajLiniju(" MOVE %D 0, R0");
-			program.dodajLiniju(" TRUE_"+idUsporedba);*/
+			program.dodajLiniju("TRUE_"+idUsporedba);
+			program.dodajLiniju(" PUSH R0 ;dodana log vrj");
 			
+			++idEvaluacija;
 			program.dodajLiniju(" JP_Z NE_EVAL_"+idEvaluacija);
 			if(!implicitnoPretvoriva(cvor.djeca.get(0).inf, "int")){
 				ispisiGresku(cvor);
 			}
 			
 			provjeri(cvor.djeca.get(2));
+			
+			program.dodajLiniju(" POP R0");//stavi 0 ili 1 na stog
+			program.dodajLiniju(" CMP R0, 0");
+			program.dodajLiniju(" MOVE %D 1, R0");
+			program.dodajLiniju(" JP_NZ TRUE_"+(++idUsporedba));
+			program.dodajLiniju(" MOVE %D 0, R0");
+			program.dodajLiniju("TRUE_"+idUsporedba);
+			program.dodajLiniju(" PUSH R0 ;dodana log vrj");
+			program.dodajLiniju(" POP R0");
+			program.dodajLiniju(" POP R1");
+			program.dodajLiniju(" AND R0, R1, R0");
+			program.dodajLiniju(" PUSH R0");
+			Djelokrug.varOdmak-=4;
+			
 			program.dodajLiniju("NE_EVAL_"+idEvaluacija);
 			if(!implicitnoPretvoriva(cvor.djeca.get(2).inf, "int")){
 				ispisiGresku(cvor);
 			}
-
+			
 			
 			cvor.inf = new Informacija("int");
 			cvor.inf.l_izraz = false;
 		}
 		
 		if(cvor.trenutacna_produkcija().equals("<log_ili_izraz> ::= <log_i_izraz>")){
-			cvor.djeca.get(0).pridruzujese = cvor.pridruzujese;
+			
 			
 			provjeri(cvor.djeca.get(0));
 			
@@ -780,15 +786,37 @@ public class GeneratorKoda {
 		if(cvor.trenutacna_produkcija().equals("<log_ili_izraz> ::= <log_ili_izraz> OP_ILI <log_i_izraz>")){
 			provjeri(cvor.djeca.get(0));
 			
+			
+			program.dodajLiniju(" POP R0");//stavi 0 ili 1 na stog
+			program.dodajLiniju(" CMP R0, 0");
+			program.dodajLiniju(" MOVE %D 1, R0");
+			program.dodajLiniju(" JP_NZ TRUE_"+(++idUsporedba));
+			program.dodajLiniju(" MOVE %D 0, R0");
+			program.dodajLiniju("TRUE_"+idUsporedba);
+			program.dodajLiniju(" PUSH R0 ;dodana log vrj");			
+			
 			++idEvaluacija;
-			program.dodajLiniju(" POP R0");
-			program.dodajLiniju(" SUB R0, 0, R0");
 			program.dodajLiniju(" JP_NZ NE_EVAL_"+idEvaluacija);
 			if(!implicitnoPretvoriva(cvor.djeca.get(0).inf, "int")){
 				ispisiGresku(cvor);
 			}
 			
 			provjeri(cvor.djeca.get(2));
+			
+			program.dodajLiniju(" POP R0");//stavi 0 ili 1 na stog
+			program.dodajLiniju(" CMP R0, 0");
+			program.dodajLiniju(" MOVE %D 1, R0");
+			program.dodajLiniju(" JP_NZ TRUE_"+(++idUsporedba));
+			program.dodajLiniju(" MOVE %D 0, R0");
+			program.dodajLiniju("TRUE_"+idUsporedba);
+			program.dodajLiniju(" PUSH R0 ;dodana log vrj");
+			program.dodajLiniju(" POP R0");
+			program.dodajLiniju(" POP R1");
+			program.dodajLiniju(" OR R0, R1, R0");
+			program.dodajLiniju(" PUSH R0");
+			Djelokrug.varOdmak-=4;
+			
+			
 			program.dodajLiniju("NE_EVAL_"+idEvaluacija);
 			if(!implicitnoPretvoriva(cvor.djeca.get(2).inf, "int")){
 				ispisiGresku(cvor);
@@ -800,7 +828,7 @@ public class GeneratorKoda {
 		
 		
 		if(cvor.trenutacna_produkcija().equals("<izraz_pridruzivanja> ::= <log_ili_izraz>")){
-			cvor.djeca.get(0).pridruzujese = cvor.pridruzujese;
+			
 			
 			provjeri(cvor.djeca.get(0));
 			
@@ -811,7 +839,7 @@ public class GeneratorKoda {
 		if(cvor.trenutacna_produkcija().equals("<izraz_pridruzivanja> ::= <postfiks_izraz> OP_PRIDRUZI <izraz_pridruzivanja>")){
 			Cvor postfiks_izraz = cvor.djeca.get(0);
 			postfiks_izraz.pridruzujemuse = true;
-			cvor.djeca.get(2).pridruzujese = true;
+			
 			
 			provjeri(postfiks_izraz);
 			if(postfiks_izraz.inf.l_izraz!=true){
@@ -831,18 +859,18 @@ public class GeneratorKoda {
 				program.dodajLiniju(" POP R0");
 				program.dodajLiniju(" POP R1");
 				program.dodajLiniju(" STORE R0, (R1)");
-				
+				program.dodajLiniju(" MOVE %D 1, R0");
+				program.dodajLiniju(" PUSH R0");
+				Djelokrug.varOdmak+=4;
 			}
 			else{
 				Djelokrug.varOdmak-=4;
-				String lokacija = trenutniDjelokrug.lokacija(postfiks_izraz.inf.ime);//TODO nevalja
-				/*if(cvor.djeca.get(2).inf.vrijednost!=null)
-					program.dodajLiniju(" MOVE %D "+cvor.djeca.get(2).inf.vrijednost+", "+postfiks_izraz.inf.ime);
-				else{*/
-					program.dodajLiniju(" POP R0");
-					program.dodajLiniju(" STORE R0, ("+lokacija+")");
-					
-				//}
+				String lokacija = trenutniDjelokrug.lokacija(postfiks_izraz.inf.ime);//TODO 
+				program.dodajLiniju(" POP R0");
+				program.dodajLiniju(" STORE R0, ("+lokacija+")");
+				program.dodajLiniju(" MOVE %D 1, R0");
+				program.dodajLiniju(" PUSH R0");
+				Djelokrug.varOdmak+=4;
 			}
 			
 			
@@ -930,6 +958,9 @@ public class GeneratorKoda {
 				|| cvor.trenutacna_produkcija().equals("<naredba> ::= <naredba_skoka>")){
 			provjeri(cvor.djeca.get(0));
 			
+			if(Djelokrug.varOdmak>0){
+				program.dodajLiniju(" ADD R7, %D "+Djelokrug.varOdmak+", R7 ;varodmak>0");
+			}
 			Djelokrug.varOdmak = 0;
 		}
 
@@ -1310,6 +1341,9 @@ public class GeneratorKoda {
 				cvor.inf.tipovi.add(cvor.djeca.get(0).inf.tip);
 			}
 			
+			if(Djelokrug.varOdmak>0){
+				program.dodajLiniju(" ADD R7, %D "+Djelokrug.varOdmak+", R7 ;varodmak>0");
+			}
 			Djelokrug.varOdmak = 0;
 		}
 		
@@ -1370,7 +1404,7 @@ public class GeneratorKoda {
 			izravni_deklarator.ntip = cvor.ntip;
 			
 			izravni_deklarator.pridruzujemuse = true;
-			inicijalizator.pridruzujese = true;
+			
 			provjeri(izravni_deklarator);
 			
 			if(trenutniDjelokrug.roditeljDjelokrug!=null)//netreba za globalne ova naredba
@@ -1593,7 +1627,7 @@ public class GeneratorKoda {
 			
 		}
 		if(cvor.trenutacna_produkcija().equals("<inicijalizator> ::= <izraz_pridruzivanja>")){
-			cvor.djeca.get(0).pridruzujese = cvor.pridruzujese;
+			
 			
 			provjeri(cvor.djeca.get(0));
 			
