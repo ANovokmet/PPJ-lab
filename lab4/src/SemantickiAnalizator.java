@@ -37,7 +37,7 @@ public class SemantickiAnalizator {
 		program = new MnemProgram();
 		
 		//BufferedReader bf = new BufferedReader(new InputStreamReader(System.in));
-		BufferedReader bf = new BufferedReader(new FileReader("npr/29_for/test.in"));
+		BufferedReader bf = new BufferedReader(new FileReader("npr/32_gcd/test.in"));
 		Cvor glavni = Cvor.stvori_stablo_iz_filea(bf);
 		
 		globalneVarijable = new HashMap<String, String>();
@@ -1832,7 +1832,7 @@ public class SemantickiAnalizator {
 		
 		
 		try {
-			if(string.startsWith("0x")){//cudno ne spominju se druge baze
+			if(string.startsWith("0x")){
 				Integer.parseInt(predznak+string.substring(2),16);
 			}
 			else if(string.startsWith("0") && string.length()>1){

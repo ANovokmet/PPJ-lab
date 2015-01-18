@@ -23,26 +23,32 @@ public class MnemProgram {
 		linije.add(" HALT");
 	}
 	
-	public void mnozenje(){
-		System.out.println("");
-	}
-	
-	public void djeljenje(){
-		System.out.println("");
-	}
-	
-	public void modiranje(){
-		System.out.println("");
-	}
+
 	
 	public void dodajLiniju(String linija){
 		linije.add(linija);
 	}
 	
 	public void ispisi(){
+		if(imadjeljenje){
+			djeljenje();
+		}
+			
+		if(imamnozenje){
+			mnozenje();
+		}
+			
+		if(imamodiranje){
+			modiranje();
+		}
+		
+		
 		for(String linija:linije){
 			System.out.println(linija);
 		}
+		
+		
+		
 		for(String linija:kraj){
 			System.out.println(linija);
 		}
@@ -98,5 +104,97 @@ public class MnemProgram {
 				break;
 			}
 		}
+	}
+	
+	public void mnozenje(){
+		dodajLiniju("pomnozi PUSH R0");
+		dodajLiniju(" PUSH R1");
+		dodajLiniju(" LOAD R0, (R7+0C)");
+		dodajLiniju(" LOAD R1, (R7+10)");
+		dodajLiniju(" MOVE 0, R6");
+		dodajLiniju(" CMP R0,0");
+		dodajLiniju(" JP_EQ kraj");
+		dodajLiniju(" CMP R1,0");
+		dodajLiniju(" JP_EQ kraj");
+		dodajLiniju(" CMP R0,0");
+		dodajLiniju(" JP_N manjiodnule");
+		dodajLiniju("petlja ADD R6,R1,R6");
+		dodajLiniju(" SUB R0,1,R0");
+		dodajLiniju(" JP_NZ petlja");
+		dodajLiniju("kraj LOAD R0,(R7+08)");
+		dodajLiniju(" STORE R0,(R7+10)");
+		dodajLiniju(" POP R1");
+		dodajLiniju(" POP R0");
+		dodajLiniju(" ADD R7,08,R7");
+		dodajLiniju(" RET");
+		dodajLiniju("manjiodnule CMP R1,0");
+		dodajLiniju(" JP_NN dalje");
+		dodajLiniju(" XOR R0,-1,R0");
+		dodajLiniju(" ADD R0,1,R0");
+		dodajLiniju(" XOR R1,-1,R1");
+		dodajLiniju(" ADD R1,1,R1");
+		dodajLiniju(" JP petlja");
+		dodajLiniju("dalje PUSH R0");
+		dodajLiniju(" PUSH R1");
+		dodajLiniju(" POP R0");
+		dodajLiniju(" POP R1");
+		dodajLiniju(" JP petlja");
+	}
+	
+	public void djeljenje(){
+		dodajLiniju("podjeli PUSH R0");
+		dodajLiniju(" PUSH R1");
+		dodajLiniju(" PUSH R2");
+		dodajLiniju(" LOAD R0, (R7+14) ;djelitelj");
+		dodajLiniju(" LOAD R1, (R7+10) ;djeljenik");
+		dodajLiniju(" MOVE 0, R6");
+		dodajLiniju(" MOVE 0, R2");
+		dodajLiniju(" CMP R0,0");
+		dodajLiniju(" JP_EQ kraj_djeljenja");
+		dodajLiniju(" CMP R1,0");
+		dodajLiniju(" JP_EQ kraj_djeljenja");
+		dodajLiniju(" CMP R0,0");
+		dodajLiniju(" JP_NN preskoci");
+		dodajLiniju(" ADD R2,1,R2");
+		dodajLiniju(" XOR R0,-1,R0");
+		dodajLiniju(" ADD R0,1,R0");
+		dodajLiniju("preskoci CMP R1,0");
+		dodajLiniju(" JP_NN djeljenje");
+		dodajLiniju(" ADD R2,1,R2");
+		dodajLiniju(" XOR R1,-1,R1");
+		dodajLiniju(" ADD R1,1,R1");
+		dodajLiniju("djeljenje ADD R6,1,R6");
+		dodajLiniju(" SUB R0,R1,R0");
+		dodajLiniju(" JP_NN djeljenje");
+		dodajLiniju(" SUB R6,1,R6");
+		dodajLiniju(" CMP R2,1");
+		dodajLiniju(" JP_NE kraj_djeljenja");
+		dodajLiniju(" XOR R6,-1,R6");
+		dodajLiniju(" ADD R6,1,R6");
+		dodajLiniju("kraj_djeljenja LOAD R0,(R7+0C)");
+		dodajLiniju(" STORE R0,(R7+14)");
+		dodajLiniju(" POP R2");
+		dodajLiniju(" POP R1");
+		dodajLiniju(" POP R0");
+		dodajLiniju(" ADD R7,08,R7");
+		dodajLiniju(" RET");
+	}
+	
+	public void modiranje(){
+		dodajLiniju("ostatak PUSH R0");
+		dodajLiniju(" LOAD R6, (R7+0C) ;djelitelj");
+		dodajLiniju(" LOAD R0, (R7+08) ;djeljenik");
+		dodajLiniju(" CMP R0,0");
+		dodajLiniju(" JP_SLE kraj_modiranja");
+		dodajLiniju(" CMP R6,0");
+		dodajLiniju(" JP_SLE kraj_modiranja");
+		dodajLiniju("modiranje SUB R6,R0,R6");
+		dodajLiniju(" JP_NN modiranje");
+		dodajLiniju(" ADD R6,R0,R6");
+		dodajLiniju("kraj_modiranja LOAD R0,(R7+04)");
+		dodajLiniju(" STORE R0,(R7+0C)");
+		dodajLiniju(" POP R0");
+		dodajLiniju(" ADD R7,08,R7");
+		dodajLiniju(" RET");
 	}
 }
