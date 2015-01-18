@@ -10,7 +10,7 @@ import javax.management.timer.Timer;
 
 public class GeneratorKoda {
 	
-	static Djelokrug globalniDjelokrug;//može i bez
+	static Djelokrug globalniDjelokrug;//moze i bez
 	static Djelokrug trenutniDjelokrug;
 	
 	static int idDjelokrug;
@@ -38,7 +38,7 @@ public class GeneratorKoda {
 		program = new MnemProgram();
 		
 		//BufferedReader bf = new BufferedReader(new InputStreamReader(System.in));
-		BufferedReader bf = new BufferedReader(new FileReader("npr/33_short/test.in"));
+		BufferedReader bf = new BufferedReader(new FileReader("npr/13_fun3/test.in"));
 		Cvor glavni = Cvor.stvori_stablo_iz_filea(bf);
 		
 		globalneVarijable = new HashMap<String, String>();
@@ -51,8 +51,8 @@ public class GeneratorKoda {
 		
 		provjeraNakonObilaska();
 		PrintStream file = new PrintStream("a.frisc");
-		program.ispisi(file);
-		//program.ispisi(System.out);
+		//program.ispisi(file);
+		program.ispisi(System.out);
 	}
 
 	public static void provjeri(Cvor cvor){
@@ -214,36 +214,31 @@ public class GeneratorKoda {
 			
 			provjeri(postfiks_izraz);
 			
-			if(!postfiks_izraz.inf.tipovi.isEmpty() || postfiks_izraz.inf.isFunkcija != true){//cudno, jel fja smije bit void?
+			if(!postfiks_izraz.inf.tipovi.isEmpty() || postfiks_izraz.inf.isFunkcija != true){
 				ispisiGresku(cvor);
 			}
 			
 			
-			//TODO sta ak ne vraca vrjednost return; ??
 			program.dodajLiniju(" CALL F_"+postfiks_izraz.inf.ime);
 			if(!postfiks_izraz.inf.tip.equals("void")){
 				program.dodajLiniju(" PUSH R6");
-				Djelokrug.varOdmak-=4;
+				Djelokrug.varOdmak+=4;
 			}
 				
-			
-			
-			
 			cvor.inf = postfiks_izraz.inf;
 			cvor.inf.l_izraz = false;
-			cvor.inf.isFunkcija = false;//cudno-mozda bez ovog al treba bit false
+			cvor.inf.isFunkcija = false;
 		}		
 		if(cvor.trenutacna_produkcija().equals("<postfiks_izraz> ::= <postfiks_izraz> L_ZAGRADA <lista_argumenata> D_ZAGRADA")){
 			Cvor postfiks_izraz = cvor.djeca.get(0);
 			Cvor lista_argumenata = cvor.djeca.get(2);
-			//cudno doraditi
 			provjeri(postfiks_izraz);
 			
 			provjeri(lista_argumenata);
-			//cudno, jel fja smije bit void?
 			
-			if(!postfiks_izraz.inf.tipovi.isEmpty() && postfiks_izraz.inf.isFunkcija == true && lista_argumenata.inf.tipovi.size()==postfiks_izraz.inf.tipovi.size()){//cudno-postfix.tip=fja(params->pov)
-				ArrayList<String> arg_tipovi= lista_argumenata.inf.tipovi;//jel tipovi il parametri?
+			
+			if(!postfiks_izraz.inf.tipovi.isEmpty() && postfiks_izraz.inf.isFunkcija == true && lista_argumenata.inf.tipovi.size()==postfiks_izraz.inf.tipovi.size()){
+				ArrayList<String> arg_tipovi= lista_argumenata.inf.tipovi;
 				ArrayList<String> param_tipovi= postfiks_izraz.inf.tipovi;
 				for(int i=0;i<arg_tipovi.size();i++){
 					
@@ -259,17 +254,17 @@ public class GeneratorKoda {
 			
 			program.dodajLiniju(" CALL F_"+postfiks_izraz.inf.ime);
 			program.dodajLiniju(" ADD R7, %D "+4*lista_argumenata.inf.tipovi.size()+", R7 ;makni postavljene arg");
-			
+			Djelokrug.varOdmak-=4*lista_argumenata.inf.tipovi.size();
 			
 			
 			if(!postfiks_izraz.inf.tip.equals("void")){
 				program.dodajLiniju(" PUSH R6");
-				//Djelokrug.varOdmak+=4; //tu mozda doradit al ovak valja
+				Djelokrug.varOdmak+=4; //ovak valja
 			}
 			
 			cvor.inf = postfiks_izraz.inf;
 			cvor.inf.l_izraz = false;
-			cvor.inf.isFunkcija = false;//cudno-opet
+			cvor.inf.isFunkcija = false;
 		}
 		
 		
@@ -281,7 +276,7 @@ public class GeneratorKoda {
 			if(postfiks_izraz.inf.l_izraz!=true || !implicitnoPretvoriva(postfiks_izraz.inf, "int")){
 				ispisiGresku(cvor);
 			}
-			//TODO frisc uveæa vrjednost
+			//TODO frisc uveca vrjednost
 			cvor.inf = postfiks_izraz.inf;
 			cvor.inf.tip = "int";
 			cvor.inf.l_izraz=false;
@@ -303,7 +298,7 @@ public class GeneratorKoda {
 		if(cvor.trenutacna_produkcija().equals("<lista_argumenata> ::= <izraz_pridruzivanja>")){
 			provjeri(cvor.djeca.get(0));
 			
-			cvor.inf = new Informacija();//cudno nema inf
+			cvor.inf = new Informacija();
 			cvor.inf.tipovi.add(cvor.djeca.get(0).inf.tip);
 			cvor.inf.imena.add(cvor.djeca.get(0).inf.ime);
 			cvor.inf.vrijednosti.add(cvor.djeca.get(0).inf.vrijednost);
@@ -315,7 +310,7 @@ public class GeneratorKoda {
 			provjeri(lista_argumenata);
 			provjeri(izraz_pridruzivanja);
 			
-			cvor.inf = lista_argumenata.inf;//cudno nema inf
+			cvor.inf = lista_argumenata.inf;
 			cvor.inf.tipovi.add(izraz_pridruzivanja.inf.tip);
 			cvor.inf.imena.add(izraz_pridruzivanja.inf.ime);
 			cvor.inf.vrijednosti.add(izraz_pridruzivanja.inf.vrijednost);
@@ -429,7 +424,6 @@ public class GeneratorKoda {
 			provjeri(cast_izraz);
 			
 			//tip cast izraz se moze explicitno pretvorit u tip ime tipa, samo dopusteno int->char
-			//cudno - dal dopusstam explicitno (int)int (char)char valjda da
 			
 			if(!eksplicitnoPretvoriva(cast_izraz.getTip(), ime_tipa.getTip()) || cast_izraz.isFunkcija() || ime_tipa.isFunkcija()){//cudno ime_tipa.isFunkcija()
 				ispisiGresku(cvor);
@@ -846,7 +840,6 @@ public class GeneratorKoda {
 				ispisiGresku(cvor);
 			}
 			provjeri(cvor.djeca.get(2));
-			//cvor.tip ~~ postfiks_izraz.tip
 			
 			if(!implicitnoPretvoriva(cvor.djeca.get(2).inf, postfiks_izraz.inf)){
 				ispisiGresku(cvor);
@@ -986,7 +979,7 @@ public class GeneratorKoda {
 			
 			Djelokrug.varOdmak-=4;
 			
-			if(!implicitnoPretvoriva(cvor.djeca.get(2).inf,"int")){//cudno al radi
+			if(!implicitnoPretvoriva(cvor.djeca.get(2).inf,"int")){
 				ispisiGresku(cvor);
 			}
 			provjeri(cvor.djeca.get(4));
@@ -1034,6 +1027,8 @@ public class GeneratorKoda {
 		if(cvor.trenutacna_produkcija().equals("<naredba_petlje> ::= KR_FOR L_ZAGRADA <izraz_naredba> <izraz_naredba> D_ZAGRADA <naredba>")){
 			program.dodajLiniju("petlja"+Djelokrug.broj_petlji);
 			provjeri(cvor.djeca.get(2));
+			program.dodajLiniju(" ADD R7, %D 4, R7");//za npr i=0
+			Djelokrug.varOdmak-=4;
 			provjeri(cvor.djeca.get(3));
 			
 			program.dodajLiniju(" POP R0");//if naredba
@@ -1055,6 +1050,8 @@ public class GeneratorKoda {
 		}
 		if(cvor.trenutacna_produkcija().equals("<naredba_petlje> ::= KR_FOR L_ZAGRADA <izraz_naredba> <izraz_naredba> <izraz> D_ZAGRADA <naredba>")){
 			provjeri(cvor.djeca.get(2));
+			program.dodajLiniju(" ADD R7, %D 4, R7");//za npr i=0
+			Djelokrug.varOdmak-=4;
 			program.dodajLiniju("petlja"+Djelokrug.broj_petlji);
 			provjeri(cvor.djeca.get(3));
 			program.dodajLiniju(" POP R0");//if naredba
@@ -1080,9 +1077,6 @@ public class GeneratorKoda {
 			|| cvor.trenutacna_produkcija().equals("<naredba_skoka> ::= KR_BREAK TOCKAZAREZ")){
 			//iskljucivo unutar petlje ili bloka koji je u petlji, bool uPetlji;
 			
-			
-			
-			
 			if(unutarPetlji==0){
 				ispisiGresku(cvor);
 			}
@@ -1104,9 +1098,9 @@ public class GeneratorKoda {
 			
 			program.dodajLiniju(" POP R6");
 			//TODO ADD R6, 4*broj parametara, R6
-			//skoèi do returna iz fje
+			//skoci do returna iz fje
 			program.dodajLiniju(" RET");
-			Djelokrug.varOdmak-=4;//neznam dal uopce
+			Djelokrug.varOdmak-=4;
 		}
 		
 		
@@ -1157,13 +1151,12 @@ public class GeneratorKoda {
 			}
 			
 			
-			//zabilježi definiciju i deklaraciju fje
+			//zabiljezi definiciju i deklaraciju fje
 			definiraneFunkcije.put(IDN.ime_iz_koda, new Informacija(ime_tipa.getTip(), null, null));
 			
 			trenutnaFunkcija = trenutniDjelokrug.dodajFunkcijuUTablicu(ime_tipa.getTip(), IDN.ime_iz_koda, null);
 			trenutnaFunkcija.ime = IDN.ime_iz_koda;
 			
-			//mozda tu da udje i izadje iz djelokruga zbog ugradnje parametara
 			Djelokrug djelokrug = new Djelokrug(trenutniDjelokrug);//udji u djelokrug
 			trenutniDjelokrug = djelokrug;
 			
@@ -1176,7 +1169,7 @@ public class GeneratorKoda {
 			program.dodajLiniju("IZ_F_"+IDN.ime_iz_koda);
 			
 			trenutniDjelokrug = trenutniDjelokrug.roditeljDjelokrug;//izadji
-			trenutnaFunkcija = null; //izaði izvan funkcije
+			trenutnaFunkcija = null; //izadi izvan funkcije
 			
 		}
 		
@@ -1207,13 +1200,10 @@ public class GeneratorKoda {
 				if(deklaracija.tip.equals(ime_tipa.getTip()) && deklaracija.isFunkcija==true
 						&& deklaracija.tipovi.size() == lista_parametara.inf.tipovi.size()){
 					for(int i=0;i<deklaracija.tipovi.size();i++){
-						//morat æu radit hashmapu argumenata(parametara)
+						//morat cu radit hashmapu argumenata(parametara)
 						if(!deklaracija.tipovi.get(i).equals(lista_parametara.inf.tipovi.get(i))){
 							ispisiGresku(cvor);
-						}//cudno izbazdariti listom
-						
-						
-						
+						}
 					}
 				}
 				else{
@@ -1222,7 +1212,6 @@ public class GeneratorKoda {
 			}
 			
 			//int bar(int x); int bar (int a){return 0;} je ok
-			//za parametre vazna imena->map<string,string> parametri, argumente ne->list tipovi
 			definiraneFunkcije.put(IDN.ime_iz_koda, new Informacija(ime_tipa.getTip(), lista_parametara.inf.tipovi,  lista_parametara.inf.imena));
 			
 			trenutnaFunkcija = trenutniDjelokrug.dodajFunkcijuUTablicu(ime_tipa.getTip(), IDN.ime_iz_koda, lista_parametara.inf.tipovi);
@@ -1261,7 +1250,7 @@ public class GeneratorKoda {
 			
 			provjeri(deklaracija_parametra);
 			
-			cvor.inf = new Informacija();//cudno nema inf
+			cvor.inf = new Informacija();
 			cvor.inf.tipovi.add(deklaracija_parametra.inf.tip);
 			cvor.inf.imena.add(deklaracija_parametra.inf.ime);
 		}
@@ -1277,7 +1266,7 @@ public class GeneratorKoda {
 				ispisiGresku(cvor);
 			}
 			
-			cvor.inf = new Informacija();//cudno nema inf
+			cvor.inf = new Informacija();
 			cvor.inf.tipovi.addAll(lista_parametara.inf.tipovi);
 			cvor.inf.tipovi.add(deklaracija_parametra.inf.tip);
 			cvor.inf.imena.addAll(lista_parametara.inf.imena);
@@ -1383,7 +1372,7 @@ public class GeneratorKoda {
 			}
 			
 			String lokacija;
-			if(trenutniDjelokrug.roditeljDjelokrug!=null){//T0D0 apsolutno neprovjereno
+			if(trenutniDjelokrug.roditeljDjelokrug!=null){
 				
 			}
 			else{
@@ -1475,7 +1464,7 @@ public class GeneratorKoda {
 				ispisiGresku(cvor);
 			}
 			
-			if((izravni_deklarator.getTip().equals("const "+T) || izravni_deklarator.getTip().equals(T)) && inicijalizator.inf.tipovi.isEmpty()){//cudno mozda napravi vize grezaka
+			if((izravni_deklarator.getTip().equals("const "+T) || izravni_deklarator.getTip().equals(T)) && inicijalizator.inf.tipovi.isEmpty()){
 				
 				if(!implicitnoPretvoriva(inicijalizator.inf, T)){
 					ispisiGresku(cvor);
@@ -1522,7 +1511,6 @@ public class GeneratorKoda {
 			
 			trenutniDjelokrug.dodajIdentifikatorUTablicu(cvor.getTip(), IDN.ime_iz_koda);//TODO
 			
-			//program.dodajLiniju(" ADD R7, %D 4,R7 ;maknuta vrjednost idn-izbrisi ovo ako nije potrebno, nezz odakle mi");
 		}
 		
 		if(cvor.trenutacna_produkcija().equals("<izravni_deklarator> ::= IDN L_UGL_ZAGRADA BROJ D_UGL_ZAGRADA")){
@@ -1538,7 +1526,7 @@ public class GeneratorKoda {
 			}
 			int broj = 0;
 			try{
-				if(BROJ.ime_iz_koda.startsWith("0x")){//cudno ne spominju se druge baze
+				if(BROJ.ime_iz_koda.startsWith("0x")){
 					broj = Integer.parseInt(BROJ.ime_iz_koda.substring(2),16);
 				}
 				else if(BROJ.ime_iz_koda.startsWith("0") && BROJ.ime_iz_koda.length()>1){
@@ -1601,7 +1589,7 @@ public class GeneratorKoda {
 			
 			if(trenutniDjelokrug.tablica_lokalnih_imena.containsKey(IDN.ime_iz_koda)){
 				Informacija deklaracija = trenutniDjelokrug.tablica_lokalnih_imena.get(IDN.ime_iz_koda);
-				//cudno-usporediti duljine?
+				
 				
 				if(deklaracija.tipovi.size()==lista_parametara.inf.tipovi.size() && deklaracija.isFunkcija==true
 						&& deklaracija.tip.equals(cvor.ntip)){
@@ -1657,7 +1645,7 @@ public class GeneratorKoda {
 			provjeri(lista_izraza_pridruzivanja);
 			
 			
-			cvor.inf = new Informacija();//cudno fali tip
+			cvor.inf = new Informacija();
 			cvor.inf.br_elem = lista_izraza_pridruzivanja.inf.br_elem;
 			cvor.inf.tipovi.addAll(lista_izraza_pridruzivanja.inf.tipovi);
 			
@@ -1670,7 +1658,7 @@ public class GeneratorKoda {
 			
 			provjeri(izraz_pridruzivanja);
 			
-			cvor.inf = new Informacija();//cudno fali tip
+			cvor.inf = new Informacija();
 			cvor.inf.br_elem = 1;
 			cvor.inf.tipovi.add(izraz_pridruzivanja.getTip());
 			cvor.inf.vrijednosti.add(izraz_pridruzivanja.inf.vrijednost);
@@ -1682,7 +1670,7 @@ public class GeneratorKoda {
 			provjeri(lista_izraza_pridruzivanja);
 			provjeri(izraz_pridruzivanja);
 			
-			cvor.inf = new Informacija();//cudno fali tip
+			cvor.inf = new Informacija();
 			cvor.inf.br_elem = lista_izraza_pridruzivanja.inf.br_elem+1;
 			cvor.inf.tipovi.addAll(lista_izraza_pridruzivanja.inf.tipovi);
 			cvor.inf.tipovi.add(izraz_pridruzivanja.getTip());
